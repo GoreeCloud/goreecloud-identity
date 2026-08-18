@@ -7,6 +7,8 @@ The project intentionally retains authentik's mature identity-provider foundatio
 - GoreeCloud project boundary: [`GOREECLOUD.md`](GOREECLOUD.md)
 - Upstream maintenance contract: [`UPSTREAM.md`](UPSTREAM.md)
 - GoreeCloud architecture baseline: [`docs/goreecloud/ARCHITECTURE.md`](docs/goreecloud/ARCHITECTURE.md)
+- UI customization boundaries: [`docs/goreecloud/UI-CUSTOMIZATION.md`](docs/goreecloud/UI-CUSTOMIZATION.md)
+- Validation gates: [`docs/goreecloud/VALIDATION.md`](docs/goreecloud/VALIDATION.md)
 - Upstream security policy and reporting: [`SECURITY.md`](SECURITY.md)
 
 ---
