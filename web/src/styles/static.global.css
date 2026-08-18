@@ -39,3 +39,6 @@
 @import "#elements/locale/ak-locale-select.css" layer(components);
 @import "#styles/authentik/components/Login/login-tokens.css" layer(components);
 @import "#styles/authentik/components/Login/login-layout.css" layer(components);
+
+/* GoreeCloud Identity product-brand overrides. Keep this last and in the reserved brand layer. */
+@import "#styles/global/brand/goreecloud.css" layer(brand);

@@ -1,0 +1,265 @@
+/*
+ * GoreeCloud Identity — Glaze UI 1.0.0 brand bridge
+ *
+ * This file intentionally stays in authentik's reserved brand layer. It changes presentation,
+ * accessibility, and resilience only; authentication behavior, identity protocols, authorization,
+ * cryptography, and server-side enforcement remain upstream-controlled.
+ */
+
+:root {
+    color-scheme: light dark;
+
+    /* Canonical Glaze UI semantic foundation. */
+    --glaze-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --glaze-canvas: #eef3f9;
+    --glaze-canvas-accent: #f8fbff;
+    --glaze-solid: #ffffff;
+    --glaze-raised: rgba(255, 255, 255, 0.94);
+    --glaze-surface: rgba(255, 255, 255, 0.76);
+    --glaze-overlay: rgba(255, 255, 255, 0.98);
+    --glaze-surface-muted: rgba(244, 247, 251, 0.86);
+    --glaze-text: #172033;
+    --glaze-muted: #67748a;
+    --glaze-line: rgba(95, 116, 146, 0.22);
+    --glaze-accent: #366cf6;
+    --glaze-accent-2: #7c5cff;
+    --glaze-success: #197a4b;
+    --glaze-warning: #8a4d00;
+    --glaze-danger: #b42318;
+    --glaze-shadow-raised: 0 12px 34px rgba(37, 55, 82, 0.08);
+    --glaze-shadow-overlay: 0 22px 64px rgba(37, 55, 82, 0.14);
+    --glaze-blur: 18px;
+    --glaze-radius-sm: 10px;
+    --glaze-radius-md: 14px;
+    --glaze-radius-control: 16px;
+    --glaze-radius-lg: 22px;
+    --glaze-radius-xl: 28px;
+    --glaze-target-min: 44px;
+    --glaze-motion-instant: 90ms;
+    --glaze-motion-fast: 160ms;
+    --glaze-motion-standard: 220ms;
+    --glaze-motion-emphasized: 320ms;
+    --glaze-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --glaze-focus-width: 3px;
+    --glaze-focus-offset: 2px;
+    --glaze-focus-ring: color-mix(in srgb, var(--glaze-accent) 72%, white);
+    --glaze-layout-range: expanded;
+
+    /* authentik token bridge. Keep this deliberately narrow and reversible. */
+    --ak-accent: var(--glaze-accent);
+    --ak-dark-foreground: #f3f6fb;
+    --ak-dark-background: #0d1119;
+    --ak-dark-background-light: #121824;
+    --ak-dark-background-lighter: #1f2736;
+    --ak-v2-global--BackgroundColor--100: var(--glaze-raised);
+    --ak-v2-global--BorderColor--100: var(--glaze-line);
+    --ak-v2-global--BorderColor--200: color-mix(in srgb, var(--glaze-muted) 58%, transparent);
+    --ak-v2-global--Color--100: var(--glaze-text);
+    --ak-v2-global--BoxShadow--lg: var(--glaze-shadow-overlay);
+    --ak-v2-global--TransitionDuration: var(--glaze-motion-standard);
+
+    /* PatternFly compatibility bridge used by existing authentik components. */
+    --pf-global--primary-color--100: var(--glaze-accent);
+    --pf-global--primary-color--200: var(--glaze-accent-2);
+    --pf-global--Color--100: var(--glaze-text);
+    --pf-global--Color--200: var(--glaze-muted);
+    --pf-global--BackgroundColor--100: var(--glaze-canvas);
+    --pf-global--BackgroundColor--150: var(--glaze-surface-muted);
+    --pf-global--BackgroundColor--200: var(--glaze-raised);
+    --pf-global--BorderColor--100: var(--glaze-line);
+    --pf-global--link--Color: var(--glaze-accent);
+    --pf-global--link--Color--hover: var(--glaze-accent-2);
+    --pf-global--target-size--MinWidth: var(--glaze-target-min);
+    --pf-global--target-size--MinHeight: var(--glaze-target-min);
+    --pf-global--TransitionDuration: var(--glaze-motion-standard);
+    --pf-global--TimingFunction: var(--glaze-ease-standard);
+
+    font-family: var(--glaze-font-sans);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --glaze-canvas: #0d1119;
+    --glaze-canvas-accent: #121824;
+    --glaze-solid: #151c28;
+    --glaze-raised: rgba(24, 31, 44, 0.96);
+    --glaze-surface: rgba(25, 32, 45, 0.78);
+    --glaze-overlay: rgba(20, 27, 39, 0.99);
+    --glaze-surface-muted: rgba(31, 39, 54, 0.86);
+    --glaze-text: #f3f6fb;
+    --glaze-muted: #a1aec0;
+    --glaze-line: rgba(193, 207, 229, 0.18);
+    --glaze-accent: #7aa2ff;
+    --glaze-accent-2: #a594ff;
+    --glaze-success: #73d9a2;
+    --glaze-warning: #f7c36c;
+    --glaze-danger: #ff8a80;
+    --glaze-shadow-raised: 0 12px 34px rgba(0, 0, 0, 0.18);
+    --glaze-shadow-overlay: 0 22px 64px rgba(0, 0, 0, 0.32);
+    --glaze-focus-ring: color-mix(in srgb, var(--glaze-accent) 78%, white);
+
+    --ak-v2-global--BackgroundColor--100: var(--glaze-raised);
+    --ak-v2-global--Color--100: var(--glaze-text);
+    --ak-v2-global--BorderColor--100: var(--glaze-line);
+    --ak-v2-global--BorderColor--200: color-mix(in srgb, var(--glaze-muted) 58%, transparent);
+    --ak-v2-global--BoxShadow--lg: var(--glaze-shadow-overlay);
+
+    --pf-global--Color--100: var(--glaze-text);
+    --pf-global--Color--200: var(--glaze-muted);
+    --pf-global--BackgroundColor--100: var(--glaze-canvas);
+    --pf-global--BackgroundColor--150: var(--glaze-surface-muted);
+    --pf-global--BackgroundColor--200: var(--glaze-raised);
+    --pf-global--BorderColor--100: var(--glaze-line);
+}
+
+/* Preserve a visible keyboard focus indicator even when a component's local theme is weak. */
+:where(a, button, input, select, textarea, [role="button"], [role="link"], [tabindex]):focus-visible {
+    outline: var(--glaze-focus-width) solid var(--glaze-focus-ring);
+    outline-offset: var(--glaze-focus-offset);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        color-scheme: dark;
+        --glaze-canvas: #0d1119;
+        --glaze-canvas-accent: #121824;
+        --glaze-solid: #151c28;
+        --glaze-raised: rgba(24, 31, 44, 0.96);
+        --glaze-surface: rgba(25, 32, 45, 0.78);
+        --glaze-overlay: rgba(20, 27, 39, 0.99);
+        --glaze-surface-muted: rgba(31, 39, 54, 0.86);
+        --glaze-text: #f3f6fb;
+        --glaze-muted: #a1aec0;
+        --glaze-line: rgba(193, 207, 229, 0.18);
+        --glaze-accent: #7aa2ff;
+        --glaze-accent-2: #a594ff;
+        --glaze-success: #73d9a2;
+        --glaze-warning: #f7c36c;
+        --glaze-danger: #ff8a80;
+        --glaze-shadow-raised: 0 12px 34px rgba(0, 0, 0, 0.18);
+        --glaze-shadow-overlay: 0 22px 64px rgba(0, 0, 0, 0.32);
+    }
+}
+
+/* Glaze UI Compact / Medium / Expanded / Wide source contract. */
+@media (max-width: 599px) {
+    :root {
+        --glaze-layout-range: compact;
+        --glaze-radius-lg: 18px;
+        --glaze-radius-xl: 22px;
+    }
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+    :root {
+        --glaze-layout-range: medium;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+    :root {
+        --glaze-layout-range: expanded;
+    }
+}
+
+@media (min-width: 1440px) {
+    :root {
+        --glaze-layout-range: wide;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --glaze-motion-instant: 0ms;
+        --glaze-motion-fast: 0ms;
+        --glaze-motion-standard: 0ms;
+        --glaze-motion-emphasized: 0ms;
+        --ak-v2-global--TransitionDuration: 0ms;
+        --pf-global--TransitionDuration: 0ms;
+    }
+}
+
+/* Prefer opaque Glaze surfaces when a user requests reduced transparency. */
+@media (prefers-reduced-transparency: reduce) {
+    :root {
+        --glaze-surface: var(--glaze-solid);
+        --glaze-raised: var(--glaze-solid);
+        --glaze-overlay: var(--glaze-solid);
+        --glaze-surface-muted: var(--glaze-solid);
+        --glaze-blur: 0px;
+    }
+}
+
+/* Browsers without backdrop-filter must still receive readable solid surfaces. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+        --glaze-surface: var(--glaze-solid);
+        --glaze-raised: var(--glaze-solid);
+        --glaze-overlay: var(--glaze-solid);
+        --glaze-surface-muted: var(--glaze-solid);
+        --glaze-blur: 0px;
+    }
+}
+
+@media (prefers-contrast: more) {
+    :root {
+        --glaze-line: color-mix(in srgb, currentColor 46%, transparent);
+        --glaze-surface: var(--glaze-solid);
+        --glaze-raised: var(--glaze-solid);
+        --glaze-overlay: var(--glaze-solid);
+        --glaze-focus-width: 4px;
+        --glaze-shadow-raised: none;
+        --glaze-shadow-overlay: none;
+    }
+}
+
+@media (forced-colors: active) {
+    :root {
+        --glaze-canvas: Canvas;
+        --glaze-canvas-accent: Canvas;
+        --glaze-solid: Canvas;
+        --glaze-raised: Canvas;
+        --glaze-surface: Canvas;
+        --glaze-overlay: Canvas;
+        --glaze-surface-muted: Canvas;
+        --glaze-text: CanvasText;
+        --glaze-muted: CanvasText;
+        --glaze-line: CanvasText;
+        --glaze-accent: LinkText;
+        --glaze-accent-2: LinkText;
+        --glaze-success: CanvasText;
+        --glaze-warning: CanvasText;
+        --glaze-danger: Mark;
+        --glaze-focus-ring: Highlight;
+        --glaze-shadow-raised: none;
+        --glaze-shadow-overlay: none;
+        --glaze-blur: 0px;
+    }
+
+    :where(a, button, input, select, textarea, [role="button"], [role="link"], [tabindex]):focus-visible {
+        outline-color: Highlight;
+    }
+}
+
+@media print {
+    :root {
+        color-scheme: light;
+        --glaze-canvas: white;
+        --glaze-canvas-accent: white;
+        --glaze-solid: white;
+        --glaze-raised: white;
+        --glaze-surface: white;
+        --glaze-overlay: white;
+        --glaze-surface-muted: white;
+        --glaze-text: black;
+        --glaze-muted: black;
+        --glaze-line: black;
+        --glaze-shadow-raised: none;
+        --glaze-shadow-overlay: none;
+        --glaze-blur: 0px;
+    }
+}
