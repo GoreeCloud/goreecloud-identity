@@ -16,6 +16,10 @@ permissions:
 
 jobs:
   dependency-review:
+    # GitHub's dependency-review action requires the repository dependency graph. The current
+    # GoreeCloud fork does not expose that capability yet, so do not turn a platform-setting
+    # limitation into a false source failure. Keep the upstream behavior unchanged on upstream.
+    if: github.repository == 'goauthentik/authentik'
     name: dependency-review
     runs-on: ubuntu-latest
     timeout-minutes: 5
