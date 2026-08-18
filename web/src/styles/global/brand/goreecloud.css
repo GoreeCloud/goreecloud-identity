@@ -1,0 +1,131 @@
+/*
+ * GoreeCloud Identity — Glaze UI 1.0.0 brand bridge
+ *
+ * This file intentionally stays at the token/brand layer. It does not change authentication
+ * behavior, flow logic, component structure, or identity-provider protocol code. The values below
+ * originate from the canonical GoreeCloud/glaze-ui 1.0.0 semantic token set and bridge only into
+ * stable, already-consumed authentik/PatternFly custom properties.
+ */
+
+:root {
+    color-scheme: light dark;
+
+    /* Canonical Glaze UI semantic tokens used by GoreeCloud Identity. */
+    --glaze-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --glaze-canvas: #eef3f9;
+    --glaze-canvas-accent: #f8fbff;
+    --glaze-surface: rgba(255, 255, 255, 0.76);
+    --glaze-surface-strong: rgba(255, 255, 255, 0.94);
+    --glaze-surface-muted: rgba(244, 247, 251, 0.86);
+    --glaze-text: #172033;
+    --glaze-muted: #67748a;
+    --glaze-line: rgba(95, 116, 146, 0.16);
+    --glaze-accent: #366cf6;
+    --glaze-accent-2: #7c5cff;
+    --glaze-success: #197a4b;
+    --glaze-warning: #a15c00;
+    --glaze-danger: #b42318;
+    --glaze-radius-sm: 10px;
+    --glaze-radius-md: 14px;
+    --glaze-radius-control: 16px;
+    --glaze-radius-lg: 22px;
+    --glaze-radius-xl: 28px;
+    --glaze-target-min: 44px;
+    --glaze-motion-fast: 160ms;
+    --glaze-motion-standard: 220ms;
+    --glaze-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --glaze-focus-width: 3px;
+    --glaze-focus-offset: 2px;
+
+    /* authentik token bridge. Keep this deliberately narrow and reversible. */
+    --ak-accent: var(--glaze-accent);
+    --ak-dark-foreground: #f3f6fb;
+    --ak-dark-background: #0d1119;
+    --ak-dark-background-light: #121824;
+    --ak-dark-background-lighter: #1f2736;
+    --ak-v2-global--BackgroundColor--100: var(--glaze-surface-strong);
+    --ak-v2-global--BorderColor--100: var(--glaze-line);
+    --ak-v2-global--BorderColor--200: color-mix(in srgb, var(--glaze-muted) 58%, transparent);
+    --ak-v2-global--Color--100: var(--glaze-text);
+    --ak-v2-global--BoxShadow--lg: 0 18px 48px rgba(37, 55, 82, 0.09);
+    --ak-v2-global--TransitionDuration: var(--glaze-motion-standard);
+
+    /* PatternFly compatibility bridge used by existing authentik components. */
+    --pf-global--primary-color--100: var(--glaze-accent);
+    --pf-global--primary-color--200: var(--glaze-accent-2);
+    --pf-global--Color--100: var(--glaze-text);
+    --pf-global--Color--200: var(--glaze-muted);
+    --pf-global--BackgroundColor--100: var(--glaze-canvas);
+    --pf-global--BackgroundColor--150: var(--glaze-surface-muted);
+    --pf-global--BackgroundColor--200: var(--glaze-surface-strong);
+    --pf-global--BorderColor--100: var(--glaze-line);
+    --pf-global--link--Color: var(--glaze-accent);
+    --pf-global--link--Color--hover: var(--glaze-accent-2);
+    --pf-global--target-size--MinWidth: var(--glaze-target-min);
+    --pf-global--target-size--MinHeight: var(--glaze-target-min);
+    --pf-global--TransitionDuration: var(--glaze-motion-standard);
+    --pf-global--TimingFunction: var(--glaze-ease-standard);
+
+    font-family: var(--glaze-font-sans);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --glaze-canvas: #0d1119;
+    --glaze-canvas-accent: #121824;
+    --glaze-surface: rgba(25, 32, 45, 0.78);
+    --glaze-surface-strong: rgba(24, 31, 44, 0.96);
+    --glaze-surface-muted: rgba(31, 39, 54, 0.86);
+    --glaze-text: #f3f6fb;
+    --glaze-muted: #a1aec0;
+    --glaze-line: rgba(193, 207, 229, 0.12);
+    --glaze-accent: #7aa2ff;
+    --glaze-accent-2: #a594ff;
+    --glaze-success: #73d9a2;
+    --glaze-warning: #f7c36c;
+    --glaze-danger: #ff8a80;
+
+    --ak-v2-global--BackgroundColor--100: var(--glaze-surface-strong);
+    --ak-v2-global--Color--100: var(--glaze-text);
+    --ak-v2-global--BorderColor--100: var(--glaze-line);
+    --ak-v2-global--BorderColor--200: color-mix(in srgb, var(--glaze-muted) 58%, transparent);
+    --ak-v2-global--BoxShadow--lg: 0 18px 54px rgba(0, 0, 0, 0.24);
+
+    --pf-global--Color--100: var(--glaze-text);
+    --pf-global--Color--200: var(--glaze-muted);
+    --pf-global--BackgroundColor--100: var(--glaze-canvas);
+    --pf-global--BackgroundColor--150: var(--glaze-surface-muted);
+    --pf-global--BackgroundColor--200: var(--glaze-surface-strong);
+    --pf-global--BorderColor--100: var(--glaze-line);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --glaze-canvas: #0d1119;
+        --glaze-canvas-accent: #121824;
+        --glaze-surface: rgba(25, 32, 45, 0.78);
+        --glaze-surface-strong: rgba(24, 31, 44, 0.96);
+        --glaze-surface-muted: rgba(31, 39, 54, 0.86);
+        --glaze-text: #f3f6fb;
+        --glaze-muted: #a1aec0;
+        --glaze-line: rgba(193, 207, 229, 0.12);
+        --glaze-accent: #7aa2ff;
+        --glaze-accent-2: #a594ff;
+        --glaze-success: #73d9a2;
+        --glaze-warning: #f7c36c;
+        --glaze-danger: #ff8a80;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --glaze-motion-fast: 0ms;
+        --glaze-motion-standard: 0ms;
+        --ak-v2-global--TransitionDuration: 0ms;
+        --pf-global--TransitionDuration: 0ms;
+    }
+}
