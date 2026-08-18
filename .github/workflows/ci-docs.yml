@@ -98,9 +98,9 @@ jobs:
   build-container:
     runs-on: ubuntu-latest
     permissions:
-      # Needed to upload container images to ghcr.io
+      # Needed to upload container images to ghcr.io on the upstream repository.
       packages: write
-      # Needed for attestation
+      # Needed for attestation.
       id-token: write
       attestations: write
     steps:
@@ -115,7 +115,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Login to Container Registry
-        if: "${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}"
+        if: "${{ github.repository == 'goauthentik/authentik' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}"
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -127,9 +127,11 @@ jobs:
           file: website/Dockerfile
           context: .
           platforms: linux/amd64,linux/arm64
+          # GoreeCloud forks may consume the public upstream cache, but must not try to write or
+          # publish into the upstream goauthentik GHCR namespace.
           cache-from: type=registry,ref=ghcr.io/goauthentik/dev-docs:buildcache
-          cache-to: "${{ (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'type=registry,ref=ghcr.io/goauthentik/dev-docs:buildcache,mode=max' || '' }}"
-          push: "${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}"
+          cache-to: "${{ github.repository == 'goauthentik/authentik' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'type=registry,ref=ghcr.io/goauthentik/dev-docs:buildcache,mode=max' || '' }}"
+          push: "${{ github.repository == 'goauthentik/authentik' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}"
           tags: |
             ghcr.io/goauthentik/dev-docs:gh-${{ steps.compute-tags.outputs.tag-full }}
             ghcr.io/goauthentik/dev-docs:gh-${{ steps.compute-tags.outputs.tag-branch }}
