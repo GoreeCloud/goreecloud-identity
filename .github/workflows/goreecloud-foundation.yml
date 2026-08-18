@@ -1,0 +1,88 @@
+name: GoreeCloud foundation guardrails
+
+on:
+  pull_request:
+    paths:
+      - "GOREECLOUD.md"
+      - "UPSTREAM.md"
+      - "README.md"
+      - "docs/goreecloud/**"
+      - "pyproject.toml"
+      - "web/package.json"
+      - "LICENSE"
+      - "web/LICENSE.txt"
+      - "packages/theme/LICENSE.txt"
+      - ".github/workflows/goreecloud-foundation.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "GOREECLOUD.md"
+      - "UPSTREAM.md"
+      - "README.md"
+      - "docs/goreecloud/**"
+      - "pyproject.toml"
+      - "web/package.json"
+      - "LICENSE"
+      - "web/LICENSE.txt"
+      - "packages/theme/LICENSE.txt"
+      - ".github/workflows/goreecloud-foundation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  maintained-fork-boundary:
+    name: Maintained-fork boundary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify required GoreeCloud records
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            GOREECLOUD.md
+            UPSTREAM.md
+            docs/goreecloud/ARCHITECTURE.md
+            docs/goreecloud/UI-CUSTOMIZATION.md
+            docs/goreecloud/VALIDATION.md
+          )
+
+          for path in "${required[@]}"; do
+            test -f "$path" || {
+              echo "Missing required GoreeCloud record: $path" >&2
+              exit 1
+            }
+          done
+
+      - name: Verify root documentation links
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'GOREECLOUD.md' README.md
+          grep -Fq 'UPSTREAM.md' README.md
+
+      - name: Preserve upstream license records
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LICENSE
+          test -f web/LICENSE.txt
+          test -f packages/theme/LICENSE.txt
+
+      - name: Prevent silent package-identity divergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq '^name = "authentik"$' pyproject.toml
+          grep -Fq '"name": "@goauthentik/web"' web/package.json
+
+      - name: Confirm maintained-fork language
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'goauthentik/authentik' GOREECLOUD.md
+          grep -Fq 'goauthentik/authentik' UPSTREAM.md
