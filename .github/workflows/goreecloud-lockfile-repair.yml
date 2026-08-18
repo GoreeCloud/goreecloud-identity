@@ -19,26 +19,36 @@ jobs:
           ref: agent/goreecloud-foundation
           fetch-depth: 0
 
-      - name: Restore baseline lockfile and apply precise security update
+      - name: Restore baseline lockfile and apply exact upstream advisory patch
         shell: bash
         run: |
           set -euo pipefail
           git show ee2b4f38b8519366796d84062104be9404a938d6:Cargo.lock > Cargo.lock
-          cargo update -p h2 --precise 0.4.16
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("Cargo.lock")
+          text = path.read_text()
+          old = '''name = "h2"\nversion = "0.4.15"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "6cb093c84e8bd9b188d4c4a8cb6579fc016968d14c99882163cd3ff402a4f155"'''
+          new = '''name = "h2"\nversion = "0.4.16"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "a9f37a958b41b3b19ee2707c06439c0e9e547e847223eb791ecb0cb821c65e27"'''
+          if text.count(old) != 1:
+              raise SystemExit("Expected exactly one vulnerable h2 lockfile entry")
+          path.write_text(text.replace(old, new))
+          PY
           grep -A4 '^name = "h2"$' Cargo.lock
           git diff --check -- Cargo.lock
-          git diff --exit-code ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock -- . ':(exclude)Cargo.lock' >/dev/null || true
+          test "$(git diff --numstat ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock | awk '{print $1":"$2}')" = "2:2"
+          git diff ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock | grep -Fq -- '-version = "0.4.15"'
+          git diff ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock | grep -Fq -- '+version = "0.4.16"'
+          git diff ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock | grep -Fq -- '-checksum = "6cb093c84e8bd9b188d4c4a8cb6579fc016968d14c99882163cd3ff402a4f155"'
+          git diff ee2b4f38b8519366796d84062104be9404a938d6 -- Cargo.lock | grep -Fq -- '+checksum = "a9f37a958b41b3b19ee2707c06439c0e9e547e847223eb791ecb0cb821c65e27"'
 
-      - name: Commit generated lockfile
+      - name: Commit exact patched lockfile
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- Cargo.lock; then
-            echo 'Cargo.lock did not change; refusing to create an empty repair commit.' >&2
-            exit 1
-          fi
           git config user.name 'GoreeCloud Automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add Cargo.lock
-          git commit -m 'security: apply minimal h2 advisory fix'
+          git commit -m 'security: apply exact h2 advisory patch'
           git push origin HEAD:agent/goreecloud-foundation
