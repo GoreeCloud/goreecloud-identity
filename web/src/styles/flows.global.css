@@ -38,3 +38,6 @@
 @import "#styles/authentik/login.css" layer(components);
 @import "#styles/authentik/components/Login/login-tokens.css" layer(components);
 @import "#styles/authentik/components/Login/flow-loading.css" layer(components);
+
+/* GoreeCloud Identity product layer: loaded last in authentik's reserved brand layer. */
+@import "#styles/global/brand/goreecloud.css" layer(brand);
