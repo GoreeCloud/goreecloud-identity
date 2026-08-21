@@ -173,12 +173,26 @@ jobs:
           mkdir -p ../packages
           cp -R packages/logger-js ../packages/logger-js
 
+          # Downstream forks do not necessarily retain upstream release tags.
+          # Fetch authentik's version tags explicitly so migration validation
+          # still runs against a real upstream stable release instead of being
+          # skipped or weakened in the GoreeCloud fork.
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+              git remote add upstream https://github.com/goauthentik/authentik.git
+          fi
+          git fetch --force --no-tags upstream 'refs/tags/version/*:refs/tags/version/*'
+
           # Previous stable tag
           prev_stable=$(git tag --sort=version:refname | grep '^version/' | grep -vE -- '-rc[0-9]+$' | tail -n1)
           # Current version family based on
           current_version_family=$(cat internal/constants/VERSION | grep -vE -- 'rc[0-9]+$' || true)
           if [[ -n $current_version_family ]]; then
               prev_stable="version/${current_version_family}"
+          fi
+
+          if [[ -z $prev_stable ]] || ! git rev-parse --verify --quiet "${prev_stable}^{commit}" >/dev/null; then
+              echo "::error::Unable to resolve an authentik stable version tag for migration validation."
+              exit 1
           fi
 
           echo "::notice::Checking out ${prev_stable} as stable version..."
@@ -483,7 +497,7 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
   publish:
-    if: "${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}"
+    if: "${{ github.repository == 'goauthentik/authentik' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}"
     needs:
       - build-compute-tags
       - build
@@ -534,7 +548,7 @@ jobs:
           subject-digest: "${{ steps.publish.outputs.digest }}"
           push-to-registry: true
   pr-comment:
-    if: "${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}"
+    if: "${{ github.repository == 'goauthentik/authentik' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}"
     needs:
       - build-compute-tags
       - publish

@@ -43,9 +43,9 @@ on:
 jobs:
   build:
     permissions:
-      # Needed to upload cache to ghcr.io
+      # Needed to upload cache to ghcr.io on the upstream repository.
       packages: write
-      # Needed for checkout
+      # Needed for checkout.
       contents: read
     name: "Build ${{ inputs.image-name }} on ${{ inputs.image-arch }}"
     runs-on: "${{ inputs.runs-on }}"
@@ -62,7 +62,7 @@ jobs:
           ref: "${{ inputs.ref }}"
       - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
       - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-      - if: "${{ inputs.should-cache }}"
+      - if: "${{ inputs.should-cache && github.repository == 'goauthentik/authentik' }}"
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -80,10 +80,13 @@ jobs:
             GEOIPUPDATE_LICENSE_KEY=${{ secrets.GEOIPUPDATE_LICENSE_KEY }}
           # outputs
           push: false
+          # Upstream caches remain useful as read-only inputs to GoreeCloud fork builds.
+          # Cache export is restricted to the upstream repository because a fork token cannot
+          # write goauthentik-owned GHCR cache tags.
           cache-from: |
             type=registry,ref=ghcr.io/goauthentik/dev-${{ inputs.image-name }}:buildcache-${{ inputs.image-arch }}-main
             type=registry,ref=ghcr.io/goauthentik/dev-${{ inputs.image-name }}:buildcache-${{ inputs.image-arch }}${{ inputs.cache-suffix }}
-          cache-to: "${{ inputs.should-cache && format('type=registry,ref=ghcr.io/goauthentik/dev-{0}:buildcache-{1}{2},mode=max', inputs.image-name, inputs.image-arch, inputs.cache-suffix) || '' }}"
+          cache-to: "${{ inputs.should-cache && github.repository == 'goauthentik/authentik' && format('type=registry,ref=ghcr.io/goauthentik/dev-{0}:buildcache-{1}{2},mode=max', inputs.image-name, inputs.image-arch, inputs.cache-suffix) || '' }}"
           attests: |
             type=provenance,mode=max
           outputs: |
