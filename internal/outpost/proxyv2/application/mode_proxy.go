@@ -29,7 +29,10 @@ func (a *Application) configureProxy() error {
 	}
 	rsp := sentry.StartSpan(context.TODO(), "authentik.outposts.proxy.application_transport")
 	rp := &httputil.ReverseProxy{
-		Director:       a.proxyModifyRequest(u),
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetXForwarded()
+			a.proxyModifyRequest(u)(pr.Out)
+		},
 		Transport:      web.NewTracingTransport(rsp.Context(), a.getUpstreamTransport()),
 		ErrorHandler:   a.newProxyErrorHandler(),
 		ModifyResponse: a.proxyModifyResponse,
