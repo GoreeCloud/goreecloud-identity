@@ -1,10 +1,21 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "token_profile": "goreecloud-identity.mesh-service-token.v1",
   "issuer": "goreecloud-identity",
   "audience": "goreecloud-mesh",
+  "runtime_implementation": {
+    "issuer_module": "authentik/goreecloud/mesh_service_token.py",
+    "tests": "tests/goreecloud/test_mesh_service_token.py",
+    "ci_workflow": ".github/workflows/goreecloud-mesh-service-token.yml",
+    "issuer_implemented": true,
+    "jwks_generation_implemented": true,
+    "durable_private_key_storage_integrated": false,
+    "jwks_endpoint_deployed": false,
+    "live_service_issuance_deployed": false
+  },
   "signing": {
     "algorithms": ["RS256"],
+    "minimum_rsa_key_bits": 2048,
     "kid_required": true,
     "verification_keys": "JWKS",
     "key_rotation": "new signing keys must be published in JWKS before tokens using them are issued"
@@ -37,10 +48,12 @@
   ],
   "security_requirements": [
     "private signing keys never leave GoreeCloud Identity",
+    "producer systems must not self-sign, mint, or substitute GoreeCloud Mesh service credentials",
     "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
     "service_id must match the authenticated workload identity represented by sub",
     "consumers must validate signature, issuer, audience, expiry, not-before, service identity, and required scope",
     "unknown kid, unsupported algorithm, missing required claim, malformed scope, or invalid temporal claim must fail closed"
   ],
+  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live service-token issuance, rotation evidence, and successful end-to-end Mesh verification.",
   "production_acceptance": false
 }
