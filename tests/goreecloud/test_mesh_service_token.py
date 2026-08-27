@@ -11,15 +11,19 @@ from authentik.goreecloud.mesh_service_token import (
     ACTIVE_PRIVATE_KEY_FILE_ENV,
     AUDIENCE,
     ISSUER,
-    RETAINED_PRIVATE_KEY_FILES_ENV,
+    RETAINED_PUBLIC_KEY_FILES_ENV,
     MeshServiceTokenIssuer,
     MeshSigningKey,
+    MeshVerificationKey,
     VerifiedWorkloadPrincipal,
 )
 
 
 def signing_key(kid: str) -> MeshSigningKey:
-    return MeshSigningKey(kid=kid, private_key=rsa.generate_private_key(public_exponent=65537, key_size=2048))
+    return MeshSigningKey(
+        kid=kid,
+        private_key=rsa.generate_private_key(public_exponent=65537, key_size=2048),
+    )
 
 
 def principal(service_id: str, *scopes: str) -> VerifiedWorkloadPrincipal:
@@ -36,6 +40,15 @@ def write_private_key(path, key: rsa.RSAPrivateKey) -> None:
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
+        )
+    )
+
+
+def write_public_key(path, key: rsa.RSAPublicKey) -> None:
+    path.write_bytes(
+        key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
     )
 
@@ -95,9 +108,12 @@ def test_principal_scope_ceiling_prevents_escalation() -> None:
 
 def test_jwks_contains_public_active_and_retained_keys_without_private_material() -> None:
     active = signing_key("mesh-key-active")
-    retained = signing_key("mesh-key-retained")
+    retained_private = signing_key("mesh-key-retained")
+    retained = retained_private.verification_key()
     issuer = MeshServiceTokenIssuer(active, [retained])
 
+    assert isinstance(retained, MeshVerificationKey)
+    assert not hasattr(retained, "private_key")
     jwks = issuer.jwks()
     assert [item["kid"] for item in jwks["keys"]] == [active.kid, retained.kid]
     for item in jwks["keys"]:
@@ -109,19 +125,21 @@ def test_jwks_contains_public_active_and_retained_keys_without_private_material(
             assert private_parameter not in item
 
 
-def test_loads_active_and_retained_keys_from_identity_owned_secret_files(tmp_path) -> None:
+def test_loads_active_private_and_retained_public_keys_from_files(tmp_path) -> None:
     active_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     retained_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    active_path = tmp_path / "active.pem"
-    retained_path = tmp_path / "retained.pem"
+    active_path = tmp_path / "active-private.pem"
+    retained_path = tmp_path / "retained-public.pem"
     write_private_key(active_path, active_private)
-    write_private_key(retained_path, retained_private)
+    write_public_key(retained_path, retained_private.public_key())
 
     issuer = MeshServiceTokenIssuer.from_environment(
         {
             ACTIVE_KID_ENV: "mesh-key-active-file",
             ACTIVE_PRIVATE_KEY_FILE_ENV: str(active_path),
-            RETAINED_PRIVATE_KEY_FILES_ENV: json.dumps({"mesh-key-retained-file": str(retained_path)}),
+            RETAINED_PUBLIC_KEY_FILES_ENV: json.dumps(
+                {"mesh-key-retained-file": str(retained_path)}
+            ),
         }
     )
 
@@ -139,6 +157,24 @@ def test_loads_active_and_retained_keys_from_identity_owned_secret_files(tmp_pat
     assert jwt.get_unverified_header(token)["kid"] == "mesh-key-active-file"
 
 
+def test_retained_rotation_configuration_rejects_private_key_files(tmp_path) -> None:
+    active_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    retained_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    active_path = tmp_path / "active-private.pem"
+    retained_private_path = tmp_path / "retained-private.pem"
+    write_private_key(active_path, active_private)
+    write_private_key(retained_private_path, retained_private)
+
+    with pytest.raises(ValueError, match="valid PEM public key"):
+        MeshServiceTokenIssuer.from_key_files(
+            active_kid="mesh-key-active-private",
+            active_private_key_file=active_path,
+            retained_public_key_files={
+                "mesh-key-retained-private": retained_private_path,
+            },
+        )
+
+
 def test_key_source_configuration_fails_closed(tmp_path) -> None:
     with pytest.raises(ValueError, match="are required"):
         MeshServiceTokenIssuer.from_environment({})
@@ -148,20 +184,20 @@ def test_key_source_configuration_fails_closed(tmp_path) -> None:
             {
                 ACTIVE_KID_ENV: "mesh-key-config",
                 ACTIVE_PRIVATE_KEY_FILE_ENV: str(tmp_path / "missing.pem"),
-                RETAINED_PRIVATE_KEY_FILES_ENV: "[]",
+                RETAINED_PUBLIC_KEY_FILES_ENV: "[]",
             }
         )
 
     invalid_path = tmp_path / "invalid.pem"
     invalid_path.write_text("not a private key")
     with pytest.raises(ValueError, match="valid unencrypted PEM"):
-        MeshServiceTokenIssuer.from_private_key_files(
+        MeshServiceTokenIssuer.from_key_files(
             active_kid="mesh-key-invalid",
             active_private_key_file=invalid_path,
         )
 
     with pytest.raises(ValueError, match="does not exist"):
-        MeshServiceTokenIssuer.from_private_key_files(
+        MeshServiceTokenIssuer.from_key_files(
             active_kid="mesh-key-missing",
             active_private_key_file=tmp_path / "missing.pem",
         )
