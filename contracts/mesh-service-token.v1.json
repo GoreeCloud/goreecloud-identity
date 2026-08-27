@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "token_profile": "goreecloud-identity.mesh-service-token.v1",
+  "issuer": "goreecloud-identity",
+  "audience": "goreecloud-mesh",
+  "signing": {
+    "algorithms": ["RS256"],
+    "kid_required": true,
+    "verification_keys": "JWKS",
+    "key_rotation": "new signing keys must be published in JWKS before tokens using them are issued"
+  },
+  "claims": {
+    "iss": "goreecloud-identity",
+    "aud": "goreecloud-mesh",
+    "sub": "service:<service_id>",
+    "service_id": "canonical GoreeCloud service identifier",
+    "scope": "space-delimited authorization scopes",
+    "iat": "NumericDate required",
+    "nbf": "NumericDate optional",
+    "exp": "NumericDate required",
+    "jti": "opaque unique token identifier required"
+  },
+  "lifetime": {
+    "maximum_seconds": 900,
+    "clock_skew_seconds": 60,
+    "refresh_model": "issue a new short-lived service credential; do not extend an existing token"
+  },
+  "mesh_scopes": [
+    "mesh.services.write",
+    "mesh.relationships.write",
+    "mesh.policy.evaluate",
+    "mesh.attestations.write",
+    "mesh.contracts.write",
+    "mesh.evidence.read",
+    "mesh.evidence.write",
+    "mesh.everkeep.recovery.write"
+  ],
+  "security_requirements": [
+    "private signing keys never leave GoreeCloud Identity",
+    "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
+    "service_id must match the authenticated workload identity represented by sub",
+    "consumers must validate signature, issuer, audience, expiry, not-before, service identity, and required scope",
+    "unknown kid, unsupported algorithm, missing required claim, malformed scope, or invalid temporal claim must fail closed"
+  ],
+  "production_acceptance": false
+}
