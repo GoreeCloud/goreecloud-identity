@@ -1,0 +1,47 @@
+name: GoreeCloud Mesh Service Token
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "authentik/goreecloud/**"
+      - "tests/goreecloud/test_mesh_service_token.py"
+      - "contracts/mesh-service-token.v1.json"
+      - ".github/workflows/goreecloud-mesh-service-token.yml"
+  pull_request:
+    paths:
+      - "authentik/goreecloud/**"
+      - "tests/goreecloud/test_mesh_service_token.py"
+      - "contracts/mesh-service-token.v1.json"
+      - ".github/workflows/goreecloud-mesh-service-token.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: goreecloud-mesh-service-token-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install isolated token test dependencies
+        run: python -m pip install --disable-pip-version-check "cryptography==50.0.0" "PyJWT==2.13.0" "pytest==9.1.1"
+
+      - name: Validate Mesh service token issuer
+        run: python -m pytest -q tests/goreecloud/test_mesh_service_token.py
+
+      - name: Validate token profile contract syntax
+        run: python -m json.tool contracts/mesh-service-token.v1.json > /dev/null
