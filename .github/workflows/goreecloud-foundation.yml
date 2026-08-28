@@ -9,6 +9,10 @@ on:
       - "docs/goreecloud/**"
       - "pyproject.toml"
       - "web/package.json"
+      - "web/src/styles/global/brand/goreecloud.css"
+      - "web/src/styles/interface.global.css"
+      - "web/src/styles/flows.global.css"
+      - "web/src/styles/static.global.css"
       - "LICENSE"
       - "web/LICENSE.txt"
       - "packages/theme/LICENSE.txt"
@@ -23,6 +27,10 @@ on:
       - "docs/goreecloud/**"
       - "pyproject.toml"
       - "web/package.json"
+      - "web/src/styles/global/brand/goreecloud.css"
+      - "web/src/styles/interface.global.css"
+      - "web/src/styles/flows.global.css"
+      - "web/src/styles/static.global.css"
       - "LICENSE"
       - "web/LICENSE.txt"
       - "packages/theme/LICENSE.txt"
@@ -37,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2
 
       - name: Verify required GoreeCloud records
         shell: bash
@@ -49,6 +57,9 @@ jobs:
             docs/goreecloud/ARCHITECTURE.md
             docs/goreecloud/UI-CUSTOMIZATION.md
             docs/goreecloud/VALIDATION.md
+            docs/goreecloud/WARDVEIL-SECURITY.md
+            docs/goreecloud/OBSERVABILITY.md
+            docs/goreecloud/PRODUCTION-READINESS.md
           )
 
           for path in "${required[@]}"; do
@@ -86,3 +97,54 @@ jobs:
           set -euo pipefail
           grep -Fq 'goauthentik/authentik' GOREECLOUD.md
           grep -Fq 'goauthentik/authentik' UPSTREAM.md
+
+      - name: Verify Glaze UI 1.3 product contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          css=web/src/styles/global/brand/goreecloud.css
+          test -f "$css"
+          grep -Fq 'Glaze UI 1.3 Stable' "$css"
+
+          for marker in \
+            '--glaze-canvas' \
+            '--glaze-solid' \
+            '--glaze-raised' \
+            '--glaze-surface' \
+            '--glaze-overlay' \
+            '--glaze-target-min: 44px' \
+            'prefers-reduced-motion: reduce' \
+            'prefers-reduced-transparency: reduce' \
+            'prefers-contrast: more' \
+            'forced-colors: active' \
+            'max-width: 599px' \
+            'min-width: 600px' \
+            'min-width: 1024px' \
+            'min-width: 1440px' \
+            ':focus-visible'; do
+              grep -Fq -- "$marker" "$css" || {
+                echo "Missing required Glaze UI marker: $marker" >&2
+                exit 1
+              }
+          done
+
+          for entrypoint in \
+            web/src/styles/interface.global.css \
+            web/src/styles/flows.global.css \
+            web/src/styles/static.global.css; do
+              grep -Fq '@import "#styles/global/brand/goreecloud.css" layer(brand);' "$entrypoint" || {
+                echo "GoreeCloud brand layer is not loaded by $entrypoint" >&2
+                exit 1
+              }
+          done
+
+      - name: Verify Wardveil and readiness boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Wardveil Security by GoreeCloud' docs/goreecloud/WARDVEIL-SECURITY.md
+          grep -Fq 'does not replace' docs/goreecloud/WARDVEIL-SECURITY.md
+          grep -Fq 'Sensitive-data exclusions' docs/goreecloud/OBSERVABILITY.md
+          grep -Fq 'Glaze UI 1.3 Stable' docs/goreecloud/PRODUCTION-READINESS.md
+          grep -Fq 'unknown, skipped, unavailable, or unverified' docs/goreecloud/PRODUCTION-READINESS.md
+          grep -Fq 'Production cutover is approved separately' docs/goreecloud/PRODUCTION-READINESS.md

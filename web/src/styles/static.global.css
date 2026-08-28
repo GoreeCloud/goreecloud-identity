@@ -8,7 +8,6 @@
  */
 
 /*
-
  * The order of layers dictated in the file above dictates the specificity of the selector rules,
  * regardless of the order in which they are imported. (If there is a conflict *within* a layer, the
  * last-one-wins rule still applies.) CSS Custom Properties can be defined after references to them
@@ -39,3 +38,6 @@
 @import "#elements/locale/ak-locale-select.css" layer(components);
 @import "#styles/authentik/components/Login/login-tokens.css" layer(components);
 @import "#styles/authentik/components/Login/login-layout.css" layer(components);
+
+/* GoreeCloud Identity product layer: loaded last in authentik's reserved brand layer. */
+@import "#styles/global/brand/goreecloud.css" layer(brand);

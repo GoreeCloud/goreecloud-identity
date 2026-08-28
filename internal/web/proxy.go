@@ -27,7 +27,9 @@ const (
 
 func (ws *WebServer) configureProxy() {
 	// Reverse proxy to the application server
-	director := func(req *http.Request) {
+	rewrite := func(pr *httputil.ProxyRequest) {
+		pr.SetXForwarded()
+		req := pr.Out
 		req.URL.Scheme = ws.upstreamURL.Scheme
 		req.URL.Host = ws.upstreamURL.Host
 		if _, ok := req.Header["User-Agent"]; !ok {
@@ -57,7 +59,7 @@ func (ws *WebServer) configureProxy() {
 		ws.log.WithField("url", req.URL.String()).WithField("headers", req.Header).Trace("tracing request to backend")
 	}
 	rp := &httputil.ReverseProxy{
-		Director:  director,
+		Rewrite:   rewrite,
 		Transport: ws.upstreamHttpClient().Transport,
 	}
 	rp.ErrorHandler = ws.proxyErrorHandler
