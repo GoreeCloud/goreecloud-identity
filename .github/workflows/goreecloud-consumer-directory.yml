@@ -6,11 +6,13 @@ on:
     paths:
       - "authentik/goreecloud/consumer_directory.py"
       - "tests/goreecloud/test_consumer_directory.py"
+      - "contracts/consumer-directory.v1.json"
       - ".github/workflows/goreecloud-consumer-directory.yml"
   pull_request:
     paths:
       - "authentik/goreecloud/consumer_directory.py"
       - "tests/goreecloud/test_consumer_directory.py"
+      - "contracts/consumer-directory.v1.json"
       - ".github/workflows/goreecloud-consumer-directory.yml"
 
 permissions:
@@ -43,3 +45,6 @@ jobs:
 
       - name: Compile consumer directory source
         run: python -m py_compile authentik/goreecloud/consumer_directory.py
+
+      - name: Validate consumer directory network contract syntax
+        run: python -m json.tool contracts/consumer-directory.v1.json > /dev/null
