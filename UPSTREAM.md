@@ -1,78 +1,94 @@
-# Upstream Maintenance Contract
+# Transitional Upstream Provenance and Retirement Contract
 
-GoreeCloud Identity is maintained from the upstream [`goauthentik/authentik`](https://github.com/goauthentik/authentik) project.
+GoreeCloud Identity currently contains source inherited from [`goauthentik/authentik`](https://github.com/goauthentik/authentik). The inherited codebase is transitional migration and reference infrastructure while GoreeCloud develops and accepts original GoreeCloud-owned native Identity services and interfaces.
 
-This document defines how GoreeCloud preserves provenance, evaluates upstream changes, and limits avoidable divergence.
+This document defines how GoreeCloud preserves upstream provenance, licensing, security maintenance, migration safety, and retirement discipline. It does **not** define a permanent maintained-fork architecture.
 
-## Upstream authority
+## Upstream provenance
 
-Upstream project: `goauthentik/authentik`
+Historical upstream project: `goauthentik/authentik`
 
-GoreeCloud fork: `GoreeCloud/goreecloud-identity`
+Current GoreeCloud repository: `GoreeCloud/goreecloud-identity`
 
-Default development baseline: the exact commit or release selected and recorded for a GoreeCloud development cycle.
+For every inherited component that remains material to a GoreeCloud runtime, GoreeCloud must be able to identify the relevant upstream baseline and distinguish inherited behavior from GoreeCloud-owned native behavior.
 
-The existence of this fork does not make every upstream `main` commit an automatically approved GoreeCloud release. GoreeCloud must evaluate and validate the exact baseline used for each release or deployment.
+The existence of the repository does not make every upstream `main` commit an automatically approved GoreeCloud change or release.
 
-## Provenance rules
+## Provenance and legal rules
 
 GoreeCloud will:
 
-- preserve the GitHub fork relationship whenever practical;
 - retain required upstream copyright, license, attribution, and third-party notices;
-- record the exact upstream commit or release used as each GoreeCloud baseline;
-- keep GoreeCloud-specific changes reviewable and attributable;
-- avoid rewriting upstream history merely to make the repository appear independently originated;
-- distinguish upstream security fixes from GoreeCloud product-layer changes;
-- retain a rollback path for material upstream integrations.
+- preserve enough Git provenance to identify inherited source and its historical origin;
+- avoid rewriting upstream history merely to make inherited code appear GoreeCloud-originated;
+- identify GoreeCloud-owned native contracts, services, migration adapters, and product surfaces separately from inherited source;
+- preserve licensing distinctions for code GoreeCloud does not own;
+- retain migration and rollback evidence while inherited runtime components remain operationally necessary.
 
-## Divergence policy
+Native migration is not a license to erase attribution.
 
-GoreeCloud should prefer the lowest-maintenance customization method that satisfies the documented requirement.
+## Native replacement policy
 
-Preferred order:
+The target architecture is original GoreeCloud-owned native Identity software.
 
-1. Supported configuration.
-2. Supported templates or themes.
-3. Documented extension points.
-4. Small, isolated source changes.
-5. Broader source divergence only when justified by security, privacy, maintainability, integration, recoverability, or technology-independence requirements.
+For each inherited capability, GoreeCloud should determine whether it is:
 
-GoreeCloud will not rewrite mature identity, protocol, cryptographic, session, or authentication behavior merely to increase the amount of GoreeCloud-owned code.
+1. a product/application implementation that should be replaced by a GoreeCloud-native component;
+2. a temporary compatibility or migration boundary that can be retired after native acceptance;
+3. a narrow standards, protocol, or cryptographic foundation whose independent replacement would materially increase security or interoperability risk; or
+4. unused inherited code that should be removed when removal is safe and legally/documentarily complete.
 
-## Upstream update process
+A complete upstream application, UI, workflow system, or general product architecture must not be retained merely because replacing it requires engineering work.
 
-Before integrating a material upstream update, GoreeCloud should:
+## Narrow-foundation exception
 
-1. Identify the exact upstream source commit or release.
-2. Review upstream release notes, security advisories, migrations, dependency changes, and breaking changes relevant to the selected baseline.
-3. Compare the upstream change against GoreeCloud-specific modifications.
-4. Resolve conflicts without silently discarding GoreeCloud security or product requirements.
-5. Run applicable upstream tests plus GoreeCloud-specific validation.
-6. Validate database and persistent-state migrations when applicable.
-7. Validate authentication, session, MFA, recovery, and provider behavior affected by the update.
-8. Record the accepted baseline and validation evidence.
-9. Keep the previous accepted state recoverable until the new state is accepted.
+GoreeCloud should not write custom cryptography or casually replace mature protocol primitives simply to increase the quantity of GoreeCloud-owned code.
+
+A retained third-party foundation must have a bounded responsibility and a documented reason. The exception should be as narrow as practical and must not become a route to preserving an upstream identity product as the permanent GoreeCloud Identity architecture.
+
+## Transitional update process
+
+While an inherited component remains part of an active GoreeCloud runtime, relevant upstream security fixes and migration changes may still need evaluation.
+
+Before integrating a material upstream change into a transitional component, GoreeCloud should:
+
+1. identify the exact upstream source commit or release;
+2. determine whether the affected inherited component is still required or can instead be retired/replaced;
+3. review relevant security advisories, migrations, dependency changes, and breaking behavior;
+4. compare the change against GoreeCloud-owned integration and migration boundaries;
+5. integrate only the change needed to keep the transitional component safe and interoperable;
+6. run applicable upstream tests plus GoreeCloud-specific validation for the affected boundary;
+7. validate persistent-state migrations when applicable;
+8. record the accepted source and evidence when the component remains deployed;
+9. keep the prior accepted state recoverable until the change is accepted.
+
+Transitional maintenance must not expand dependency on upstream product architecture without a documented migration necessity.
 
 ## Security updates
 
-Security fixes receive priority over cosmetic or product-layer changes.
+Relevant security fixes take priority while inherited code remains reachable or deployed. If maintaining a GoreeCloud customization obstructs timely remediation, GoreeCloud should prefer reducing or removing that inherited dependency rather than accumulating deeper product divergence.
 
-When upstream publishes a relevant security fix, GoreeCloud should minimize the delay introduced by local divergence. If a GoreeCloud customization materially obstructs timely security updates, that customization must be reconsidered.
-
-The upstream `SECURITY.md` remains important for authentik vulnerability-reporting and supported-version information. GoreeCloud-specific deployment or customization defects must also be evaluated within the GoreeCloud project boundary.
+The upstream `SECURITY.md` remains relevant to inherited authentik code. GoreeCloud-native defects, contracts, deployment boundaries, and migration adapters are governed by GoreeCloud security processes and Wardveil Security requirements.
 
 ## Licensing baseline
 
-The fork currently preserves upstream licensing. The repository root `LICENSE` states that content outside specifically identified exceptions is MIT licensed, while `website/` and `authentik/enterprise/` have separate licensing conditions and incorporated third-party components retain their original licenses.
+The repository currently preserves upstream licensing. The root `LICENSE` and component-specific license records remain authoritative for inherited source and third-party components.
 
-GoreeCloud must preserve those distinctions. Rebranding does not authorize removal of required notices or relicensing of code that GoreeCloud does not own.
+Rebranding or native migration does not authorize removal of required notices or relicensing of code that GoreeCloud does not own. When inherited components are removed, their applicable historical licensing/provenance records must remain available where required for audit and compliance.
 
-## Release identity
+## Retirement evidence
 
-A future GoreeCloud Identity release should identify both:
+An inherited runtime component may be retired when its required GoreeCloud capability has a native replacement with sufficient evidence for the target environment. Retirement should record:
 
-- its GoreeCloud release/version; and
-- the exact upstream authentik baseline from which it was built.
+- the inherited component and upstream baseline being removed;
+- the native GoreeCloud replacement and exact revision;
+- migration and compatibility behavior;
+- persistence/data migration when applicable;
+- security and privacy acceptance;
+- backup/recovery and rollback coverage;
+- representative application integration;
+- any narrow third-party standards/crypto foundation intentionally retained.
 
-This dual identity makes security review, reproduction, upstream comparison, migration, and rollback practical.
+## Release identity during migration
+
+While a GoreeCloud Identity release still contains material inherited authentik source, release records should identify both the GoreeCloud release/revision and the applicable inherited upstream baseline. Once a native release no longer depends on the upstream product architecture, release identity should reflect that native state while historical provenance remains preserved.
