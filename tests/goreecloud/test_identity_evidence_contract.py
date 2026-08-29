@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROFILE_PATH = ROOT / "contracts" / "identity.mesh-evidence-profile.json"
 EVIDENCE_SCHEMA_PATH = ROOT / "contracts" / "identity.evidence.schema.json"
 SERVICE_TOKEN_PATH = ROOT / "contracts" / "mesh-service-token.v1.json"
+DELIVERY_CLIENT_PATH = ROOT / "goreecloud_identity" / "mesh_delivery.py"
 
 EXPECTED_DOMAINS = {
     "identity",
@@ -48,9 +49,17 @@ def test_profile_separates_evidence_from_authentication_credentials() -> None:
     delivery = profile["runtime_delivery"]
     assert delivery["producer_service_id"] == "goreecloud-identity"
     assert delivery["producer_identity_must_match_envelope"] is True
-    assert delivery["delivery_client"] is None
-    assert delivery["implemented"] is False
+    assert delivery["delivery_client"] == "goreecloud_identity.mesh_delivery.MeshDeliveryClient"
+    assert delivery["https_required_except_loopback"] is True
+    assert delivery["redirects_followed"] is False
+    assert delivery["credential_persisted"] is False
+    assert delivery["receipt_requires_evidence_id_binding"] is True
+    assert delivery["receipt_requires_producer_service_binding"] is True
+    assert delivery["implemented"] is True
+    assert DELIVERY_CLIENT_PATH.is_file()
+
     assert delivery["production_acceptance"] is False
+    assert profile["status"] == "source-implemented"
     assert profile["production_acceptance"] is False
 
 
