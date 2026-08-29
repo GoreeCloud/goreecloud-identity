@@ -1,65 +1,77 @@
 # GoreeCloud Identity
 
-GoreeCloud Identity is the planned long-term authentication and identity authority for GoreeCloud applications and services.
+GoreeCloud Identity is GoreeCloud's platform authority for identity, authentication, authorization, accounts, devices, credentials, sessions, and delegated authority.
 
-This repository is a GoreeCloud-maintained fork of [`goauthentik/authentik`](https://github.com/goauthentik/authentik). The project intentionally retains authentik's mature identity-provider foundation while GoreeCloud develops a controlled product layer, Glaze UI integration, deployment policy, recovery model, and application-integration contracts.
+The repository currently contains an inherited authentik-derived codebase plus GoreeCloud-owned contracts and integration work. That inherited product architecture is **transitional migration and reference infrastructure**, not the approved permanent GoreeCloud Identity architecture. The target is original GoreeCloud-owned native Identity software built around GoreeCloud-owned contracts and service boundaries.
+
+GoreeCloud preserves the provenance, licenses, notices, and security obligations of inherited code for as long as that code remains present. Native migration must not rewrite history or imply GoreeCloud authorship of upstream code.
 
 ## Project role
 
-GoreeCloud Identity is responsible for establishing and authenticating platform identities. Participating applications remain responsible for their own authorization, data ownership, and application-specific permissions.
+GoreeCloud Identity establishes and authenticates GoreeCloud human, service, device, session, and delegated identities and supplies platform authorization primitives where defined by GoreeCloud Identity contracts. Participating applications remain authoritative for their own business rules, data ownership, and application-specific permissions unless a separate GoreeCloud platform contract explicitly assigns a decision to Identity.
 
-The intended control layers are:
+Authentication must never be interpreted as automatic Privacy Shield data-use authorization, Wardveil Security acceptance, Everkeep recovery readiness, or application permission.
 
-1. **NetBird** controls approved private-network connectivity.
-2. **GoreeCloud Identity** authenticates an approved human or service identity.
-3. **Each application** authorizes what that identity may access or change.
+## Native development direction
 
-Single sign-on must not collapse these boundaries.
+The long-term architecture is GoreeCloud-owned native software. Migration proceeds capability by capability so security-critical behavior is replaced deliberately rather than through a cosmetic rebrand or a risky all-at-once rewrite.
 
-## Initial integration direction
+Narrow standards, protocol, and cryptographic foundations may be retained when independently reimplementing them would materially increase security or interoperability risk. Such exceptions must stay bounded: they do not justify retaining a complete upstream identity product, upstream UI, upstream workflow architecture, or upstream general application logic as the permanent GoreeCloud Identity implementation.
 
-OpenID Connect and OAuth 2.0 are the preferred modern integration paths for GoreeCloud-controlled applications where appropriate. Additional upstream-supported identity protocols may be retained when they satisfy a documented GoreeCloud requirement.
+Current GoreeCloud-owned source boundaries include platform contracts and service-token integration used by GoreeCloud Mesh. New native components should be added behind GoreeCloud-owned interfaces and acceptance evidence so inherited product dependencies can be retired progressively.
 
-Planned platform capabilities include:
+## Platform capabilities
 
-- individual user identities rather than shared family accounts;
-- multi-factor authentication;
-- passkeys/WebAuthn where supported;
-- session visibility and revocation;
-- application/client registration;
-- groups and role mappings;
-- service or machine identities where justified;
-- auditable authentication events;
-- recoverable administrative access.
+The target platform includes:
 
-Protocol and feature support must be validated against the exact upstream baseline before GoreeCloud records a capability as implemented.
+- individual human identities;
+- first-class service and machine identities;
+- passkeys/WebAuthn and appropriate multi-factor authentication;
+- session visibility, policy, and revocation;
+- application/client registration and standards-based federation where required;
+- device identity and device-bound trust inputs;
+- groups, roles, grants, and delegated authority;
+- auditable authentication and authorization decisions;
+- independently recoverable administrative access;
+- minimized producer-authoritative Identity evidence for GoreeCloud Mesh;
+- Identity Center as the GoreeCloud-owned user and administrative experience.
+
+A capability is not considered production-accepted merely because equivalent behavior exists in the inherited authentik-derived tree. GoreeCloud acceptance requires the exact implementation, authority boundary, security behavior, persistence/recovery path, and target-environment evidence to be validated.
 
 ## Product experience
 
-The long-term product name is **GoreeCloud Identity**. GoreeCloud-controlled user-facing surfaces should progressively adopt the Glaze UI design language while preserving accessibility, security, upstream maintainability, and legal obligations.
+The product is **GoreeCloud Identity**. GoreeCloud-controlled user-facing surfaces must use the current applicable Stable Glaze UI contract and the governed **Identity Center** name.
 
-Normal family users should not need to understand identity-provider implementation terminology to sign in, enroll MFA or passkeys, review sessions, recover an account, or manage basic account security.
+Users should not need to understand inherited identity-provider implementation terminology to sign in, enroll a passkey or MFA method, review sessions/devices, recover an account, or manage account security. Native Identity Center work must simplify those tasks without weakening security, privacy, accessibility, or authority boundaries.
 
 ## Security boundary
 
-Identity infrastructure is security-critical. GoreeCloud will avoid unnecessary modification of mature protocol and cryptographic behavior. Customization should prefer supported configuration, templates, themes, extension points, and upstream-compatible changes before deep source divergence.
+Identity infrastructure is security-critical. GoreeCloud must avoid unnecessary custom cryptography and must use well-reviewed standards/cryptographic foundations where justified. That security constraint does not require permanent dependence on an upstream product architecture.
 
 GoreeCloud Identity must maintain an independently documented break-glass recovery path. Recovery must not depend exclusively on successfully authenticating through the failed identity service itself.
 
-Passwords, client secrets, signing material, recovery credentials, tokens, private keys, SMTP credentials, and other reusable secrets must never be committed to this repository.
+Passwords, client secrets, signing material, recovery credentials, bearer tokens, session secrets, private keys, SMTP credentials, and other reusable secrets must never be committed to this repository or transported as Mesh evidence.
+
+## Mesh evidence boundary
+
+`contracts/identity.evidence.schema.json` is the producer-owned minimized Identity evidence contract. `contracts/identity.mesh-evidence-profile.json` defines the Identity authority domains and Mesh integration boundary.
+
+`contracts/mesh-service-token.v1.json` is an authentication credential contract for service delivery. It is intentionally separate from the producer evidence contract: a valid service token proves the service principal and granted Mesh scope, not the truth of an Identity-domain evidence assertion.
+
+Identity evidence delivery remains source-level and unaccepted for production until an Identity-owned delivery client, deployed verifier, key/signing custody, target routing, runtime evidence, and acceptance gates are complete.
 
 ## Deployment direction
 
-The planned deployment model is Docker and Docker Compose. The long-term production placement is the GoreeCloud Infrastructure Services VM. The planned private product hostname is `identity.goreecloud.com`.
+The final deployment topology must be defined by the native GoreeCloud Identity architecture and current GoreeCloud infrastructure requirements. Transitional inherited components may continue to run only as explicitly documented migration infrastructure while their native replacements are implemented and accepted.
 
-Production deployment is not authorized merely because this fork exists. Before production acceptance, GoreeCloud will validate the exact upstream baseline, licensing, builds, persistence, backups, restores, break-glass access, private publication, monitoring, security controls, and at least one end-to-end application integration.
+Production deployment is not authorized merely because inherited code or a source contract exists. Acceptance requires exact-revision validation of identity protocols and security behavior, persistence, backups/restores, key custody, break-glass access, private publication, monitoring, Wardveil/Privacy Shield/Everkeep/Mesh integration, and representative end-to-end application use.
 
 ## Upstream relationship
 
-See [`UPSTREAM.md`](UPSTREAM.md) for the fork-maintenance contract, provenance rules, and synchronization principles.
+See [`UPSTREAM.md`](UPSTREAM.md) for provenance, licensing, security-maintenance, and retirement rules governing the inherited authentik-derived source while it remains in this repository.
 
 ## Current status
 
-**Status: Foundation / upstream evaluation.**
+**Status: Active native migration / source integration.**
 
-The fork exists and the GoreeCloud project boundary is being established. No production cutover or GoreeCloud-wide authentication migration is implied by this repository state.
+The repository still contains substantial inherited authentik-derived implementation. GoreeCloud-owned service-token and evidence contracts now establish part of the native platform boundary, but the broader native Identity runtime, Identity Center, production Mesh evidence delivery, and production acceptance remain incomplete. No production cutover or GoreeCloud-wide authentication migration is implied by repository source state alone.

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.org/contracts/identity.evidence.schema.json",
+  "title": "GoreeCloud Identity Evidence Assertion v1",
+  "description": "Producer-owned minimized evidence contract for GoreeCloud Identity assertions transported through GoreeCloud Mesh. This contract never contains reusable credentials or secret material and does not transfer Identity authority to Mesh or presentation consumers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "authority_domain",
+    "assertion",
+    "outcome",
+    "subject",
+    "source",
+    "observed_at",
+    "valid_until",
+    "data_class",
+    "contains_user_content",
+    "contains_secret_material",
+    "contains_reusable_credentials",
+    "contains_raw_profile_attributes"
+  ],
+  "properties": {
+    "contract": {
+      "const": "goreecloud.identity-evidence.v1"
+    },
+    "authority_domain": {
+      "enum": [
+        "identity",
+        "authentication",
+        "authorization",
+        "accounts",
+        "devices",
+        "credentials",
+        "sessions",
+        "delegated-authority"
+      ]
+    },
+    "assertion": {
+      "enum": [
+        "service-identity-verification",
+        "authentication-result",
+        "authorization-decision",
+        "account-state",
+        "device-identity-state",
+        "credential-state",
+        "session-state",
+        "delegated-authority-state"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Identity-defined result. Consumers must interpret it only under the Identity contract governing the assertion."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Opaque subject, account, device, session, service, or delegated-authority identifier."
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Opaque Identity-controlled evidence reference. It must not embed a bearer token, password, recovery code, private key, or raw profile payload."
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_class": {
+      "enum": ["public", "operational", "derived"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      }
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "payload_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "contains_user_content": {
+      "const": false
+    },
+    "contains_secret_material": {
+      "const": false
+    },
+    "contains_reusable_credentials": {
+      "const": false
+    },
+    "contains_raw_profile_attributes": {
+      "const": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"assertion": {"const": "service-identity-verification"}}},
+      "then": {"properties": {"authority_domain": {"const": "identity"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "authentication-result"}}},
+      "then": {"properties": {"authority_domain": {"const": "authentication"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "authorization-decision"}}},
+      "then": {"properties": {"authority_domain": {"const": "authorization"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "account-state"}}},
+      "then": {"properties": {"authority_domain": {"const": "accounts"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "device-identity-state"}}},
+      "then": {"properties": {"authority_domain": {"const": "devices"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "credential-state"}}},
+      "then": {"properties": {"authority_domain": {"const": "credentials"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "session-state"}}},
+      "then": {"properties": {"authority_domain": {"const": "sessions"}}}
+    },
+    {
+      "if": {"properties": {"assertion": {"const": "delegated-authority-state"}}},
+      "then": {"properties": {"authority_domain": {"const": "delegated-authority"}}}
+    }
+  ]
+}

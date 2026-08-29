@@ -7,6 +7,7 @@ on:
       - "UPSTREAM.md"
       - "README.md"
       - "docs/goreecloud/**"
+      - "contracts/**"
       - "pyproject.toml"
       - "web/package.json"
       - "LICENSE"
@@ -21,6 +22,7 @@ on:
       - "UPSTREAM.md"
       - "README.md"
       - "docs/goreecloud/**"
+      - "contracts/**"
       - "pyproject.toml"
       - "web/package.json"
       - "LICENSE"
@@ -32,12 +34,14 @@ permissions:
   contents: read
 
 jobs:
-  maintained-fork-boundary:
-    name: Maintained-fork boundary
+  native-migration-boundary:
+    name: Native migration boundary
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Verify required GoreeCloud records
         shell: bash
@@ -49,6 +53,8 @@ jobs:
             docs/goreecloud/ARCHITECTURE.md
             docs/goreecloud/UI-CUSTOMIZATION.md
             docs/goreecloud/VALIDATION.md
+            contracts/identity.mesh-evidence-profile.json
+            contracts/identity.evidence.schema.json
           )
 
           for path in "${required[@]}"; do
@@ -65,7 +71,7 @@ jobs:
           grep -Fq 'GOREECLOUD.md' README.md
           grep -Fq 'UPSTREAM.md' README.md
 
-      - name: Preserve upstream license records
+      - name: Preserve inherited license records
         shell: bash
         run: |
           set -euo pipefail
@@ -73,16 +79,28 @@ jobs:
           test -f web/LICENSE.txt
           test -f packages/theme/LICENSE.txt
 
-      - name: Prevent silent package-identity divergence
+      - name: Preserve inherited package identity while present
         shell: bash
         run: |
           set -euo pipefail
           grep -Eq '^name = "authentik"$' pyproject.toml
           grep -Fq '"name": "@goauthentik/web"' web/package.json
 
-      - name: Confirm maintained-fork language
+      - name: Enforce native target architecture
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'goauthentik/authentik' GOREECLOUD.md
-          grep -Fq 'goauthentik/authentik' UPSTREAM.md
+          grep -Fq 'original GoreeCloud-owned native Identity software' GOREECLOUD.md
+          grep -Fq 'does **not** define a permanent maintained-fork architecture' UPSTREAM.md
+          if grep -Fq 'repository is a GoreeCloud-maintained fork' GOREECLOUD.md; then
+            echo 'GOREECLOUD.md still declares a permanent maintained-fork product architecture' >&2
+            exit 1
+          fi
+
+      - name: Validate GoreeCloud JSON contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool contracts/identity.mesh-evidence-profile.json > /dev/null
+          python -m json.tool contracts/identity.evidence.schema.json > /dev/null
+          python -m json.tool contracts/mesh-service-token.v1.json > /dev/null
