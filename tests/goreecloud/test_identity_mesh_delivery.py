@@ -82,7 +82,9 @@ def test_delivery_requires_https_except_loopback() -> None:
         MeshDeliveryClient("https://mesh.goreecloud.com?token=secret")
 
 
-def test_delivery_binds_identity_producer_and_receipt_without_returning_credential(monkeypatch) -> None:
+def test_delivery_binds_identity_producer_and_receipt_without_returning_credential(
+    monkeypatch,
+) -> None:
     fake = FakeOpener(FakeResponse(accepted_payload()))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
 
