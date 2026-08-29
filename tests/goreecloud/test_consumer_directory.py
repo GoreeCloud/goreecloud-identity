@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from authentik.goreecloud.consumer_directory import (
@@ -8,6 +11,9 @@ from authentik.goreecloud.consumer_directory import (
     InvalidDirectoryRequest,
     normalize_handle,
 )
+
+
+CONTRACT_PATH = Path(__file__).parents[2] / "contracts" / "consumer-directory.v1.json"
 
 
 def test_exact_handle_resolution_returns_minimum_consumer_projection() -> None:
@@ -90,3 +96,35 @@ def test_duplicate_canonical_handles_are_rejected() -> None:
                 DirectoryEntry(subject="subject-2", handle="@alice", discoverable=True),
             ]
         )
+
+
+def test_network_contract_cannot_client_assert_requester_or_enumerate_directory() -> None:
+    contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+
+    assert contract["contract_id"] == "goreecloud-identity.consumer-directory.v1"
+    assert contract["request"]["method"] == "POST"
+    assert contract["request"]["path"] == "/v1/consumer-directory/resolve"
+    assert contract["request"]["body"]["required_fields"] == ["handle"]
+    assert contract["request"]["body"]["allowed_fields"] == ["handle"]
+    assert contract["request"]["authentication"]["requester_service_source"] == "verified_service_principal"
+    assert contract["request"]["authentication"]["requester_service_must_not_be_client_supplied"] is True
+
+    unresolved = contract["responses"]["not_resolved"]
+    assert unresolved["status"] == 404
+    assert unresolved["body"]["error"]["code"] == "not_resolved"
+    assert set(unresolved["indistinguishable_conditions"]) == {
+        "handle does not exist",
+        "account is not discoverable",
+        "verified requesting service is not authorized for disclosure",
+    }
+
+    privacy = contract["privacy_requirements"]
+    assert privacy["exact_match_only"] is True
+    assert privacy["prefix_search_prohibited"] is True
+    assert privacy["fuzzy_search_prohibited"] is True
+    assert privacy["directory_browse_prohibited"] is True
+    assert privacy["administrative_listing_prohibited"] is True
+    assert privacy["email_or_phone_disclosure_prohibited"] is True
+    assert privacy["uniform_negative_response_required"] is True
+
+    assert contract["responses"]["resolved"]["body_fields"] == ["subject", "handle", "display_name"]
