@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.0.1",
   "system": "goreecloud-identity",
   "producer_repository": "GoreeCloud/goreecloud-identity",
   "authority_domains": [
@@ -41,6 +41,9 @@
     "production_acceptance": false
   },
   "producer_contracts": [
+    "contracts/identity.evidence.schema.json"
+  ],
+  "authentication_contracts": [
     "contracts/mesh-service-token.v1.json"
   ],
   "permitted_assertion_families": [
@@ -58,18 +61,19 @@
     "passwords_passkeys_private_keys": "prohibited",
     "recovery_secrets_and_codes": "prohibited",
     "bearer_tokens_and_session_secrets": "prohibited",
-    "raw_identity_profile_attributes": "prohibited_unless_separately_authorized_and_required",
+    "raw_identity_profile_attributes": "prohibited",
     "raw_user_content": "prohibited",
     "preferred_content": "opaque subject or service identifiers, bounded authentication or authorization outcomes, reason codes, session or credential state, freshness, evidence references, and optional digests"
   },
   "authority_rules": [
     "GoreeCloud Identity remains authoritative for GoreeCloud identity, authentication, platform authorization, account, device, credential, session, and delegated-authority assertions.",
+    "The Mesh service-token contract authenticates a service delivery principal; it is not an evidence assertion contract and must never be placed inside an evidence envelope as the producer evidence contract.",
     "Mesh may verify, transport, persist, correlate, and present minimized Identity evidence but cannot mint, extend, reinterpret, or upgrade Identity authority.",
     "A valid Identity assertion does not independently authorize a Privacy Shield data-use purpose, establish a Wardveil security outcome, prove Everkeep recoverability, or establish Glaze UI design conformance.",
     "Privacy Shield remains authoritative for privacy and data-use authorization even when the requesting actor is authenticated by GoreeCloud Identity.",
     "Wardveil remains authoritative for security evaluation and protection outcomes involving an authenticated identity.",
     "Glaze UI may present Identity evidence but cannot create or strengthen identity, authentication, authorization, account, device, credential, or session truth.",
-    "Identity evidence transported through Mesh must be minimized and must never contain reusable credentials, private signing material, recovery secrets, or session bearer secrets."
+    "Identity evidence transported through Mesh must be minimized and must never contain reusable credentials, private signing material, recovery secrets, session bearer secrets, or raw identity profile attributes."
   ],
   "status": "source-profile",
   "production_acceptance": false
