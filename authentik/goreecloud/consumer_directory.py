@@ -9,14 +9,17 @@ The contract is provider-independent even while the current transition host is
 the Identity repository. A future native Identity runtime can preserve this
 behavior without preserving any upstream provider implementation detail.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 _HANDLE_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,30}[a-z0-9])?$")
 _SERVICE_ID_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
+_MAX_SUBJECT_LENGTH = 255
+_MAX_DISPLAY_NAME_LENGTH = 160
 
 
 class InvalidDirectoryRequest(ValueError):
@@ -62,12 +65,14 @@ class DirectoryEntry:
 
     def __post_init__(self) -> None:
         subject = str(self.subject or "").strip()
-        if not subject or len(subject) > 255:
-            raise ValueError("subject must be a non-empty opaque identifier up to 255 characters")
+        if not subject or len(subject) > _MAX_SUBJECT_LENGTH:
+            raise ValueError(
+                f"subject must be a non-empty opaque identifier up to {_MAX_SUBJECT_LENGTH} characters"
+            )
         handle = normalize_handle(self.handle)
         display_name = str(self.display_name or "").strip()
-        if len(display_name) > 160:
-            raise ValueError("display_name must be at most 160 characters")
+        if len(display_name) > _MAX_DISPLAY_NAME_LENGTH:
+            raise ValueError(f"display_name must be at most {_MAX_DISPLAY_NAME_LENGTH} characters")
         allowed_services = frozenset(normalize_service_id(item) for item in self.allowed_services)
 
         object.__setattr__(self, "subject", subject)
@@ -98,7 +103,12 @@ class ExactHandleDirectory:
             by_handle[entry.handle] = entry
         self._by_handle = by_handle
 
-    def resolve_exact(self, *, requester_service: str, handle: str) -> ResolvedDirectoryEntry | None:
+    def resolve_exact(
+        self,
+        *,
+        requester_service: str,
+        handle: str,
+    ) -> ResolvedDirectoryEntry | None:
         """Resolve one exact handle under explicit account/service discovery policy.
 
         ``None`` intentionally represents all non-resolvable states: unknown
