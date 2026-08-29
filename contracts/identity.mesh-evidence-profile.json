@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.1",
+  "schema_version": "1.1.0",
   "system": "goreecloud-identity",
   "producer_repository": "GoreeCloud/goreecloud-identity",
   "authority_domains": [
@@ -33,11 +33,15 @@
     "producer_service_id": "goreecloud-identity",
     "write_scope": "mesh.evidence.write",
     "read_scope": "mesh.evidence.read",
-    "delivery_client": null,
+    "delivery_client": "goreecloud_identity.mesh_delivery.MeshDeliveryClient",
     "producer_identity_must_match_envelope": true,
     "https_required_except_loopback": true,
+    "redirects_followed": false,
     "credential_issuer": "GoreeCloud Identity",
-    "implemented": false,
+    "credential_persisted": false,
+    "receipt_requires_evidence_id_binding": true,
+    "receipt_requires_producer_service_binding": true,
+    "implemented": true,
     "production_acceptance": false
   },
   "producer_contracts": [
@@ -73,8 +77,9 @@
     "Privacy Shield remains authoritative for privacy and data-use authorization even when the requesting actor is authenticated by GoreeCloud Identity.",
     "Wardveil remains authoritative for security evaluation and protection outcomes involving an authenticated identity.",
     "Glaze UI may present Identity evidence but cannot create or strengthen identity, authentication, authorization, account, device, credential, or session truth.",
-    "Identity evidence transported through Mesh must be minimized and must never contain reusable credentials, private signing material, recovery secrets, session bearer secrets, or raw identity profile attributes."
+    "Identity evidence transported through Mesh must be minimized and must never contain reusable credentials, private signing material, recovery secrets, session bearer secrets, or raw identity profile attributes.",
+    "Source implementation does not establish deployed runtime delivery or production acceptance; those require exact-target runtime evidence."
   ],
-  "status": "source-profile",
+  "status": "source-implemented",
   "production_acceptance": false
 }
