@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "system": "goreecloud-identity",
+  "producer_repository": "GoreeCloud/goreecloud-identity",
+  "authority_domains": [
+    "identity",
+    "authentication",
+    "authorization",
+    "accounts",
+    "devices",
+    "credentials",
+    "sessions",
+    "delegated-authority"
+  ],
+  "mesh_envelope": {
+    "version": "goreecloud.evidence-envelope.v1",
+    "repository": "GoreeCloud/goreecloud-mesh",
+    "path": "contracts/mesh.evidence-envelope.schema.json"
+  },
+  "platform_evidence_plane": {
+    "contract": "goreecloud.platform-evidence-plane.v1",
+    "repository": "GoreeCloud/goreecloud-mesh",
+    "path": "contracts/mesh.platform-evidence-plane.v1.json",
+    "authority_transfer": false
+  },
+  "presentation_consumer": {
+    "system": "glaze-ui",
+    "repository": "GoreeCloud/goreecloud-glaze-ui",
+    "path": "contracts/glaze.evidence-presentation.schema.json",
+    "may_upgrade_identity_truth": false
+  },
+  "runtime_delivery": {
+    "producer_service_id": "goreecloud-identity",
+    "write_scope": "mesh.evidence.write",
+    "read_scope": "mesh.evidence.read",
+    "delivery_client": null,
+    "producer_identity_must_match_envelope": true,
+    "https_required_except_loopback": true,
+    "credential_issuer": "GoreeCloud Identity",
+    "implemented": false,
+    "production_acceptance": false
+  },
+  "producer_contracts": [
+    "contracts/mesh-service-token.v1.json"
+  ],
+  "permitted_assertion_families": [
+    "service-identity-verification",
+    "authentication-result",
+    "authorization-decision",
+    "account-state",
+    "device-identity-state",
+    "credential-state",
+    "session-state",
+    "delegated-authority-state"
+  ],
+  "minimization": {
+    "allowed_data_classes": ["public", "operational", "derived"],
+    "passwords_passkeys_private_keys": "prohibited",
+    "recovery_secrets_and_codes": "prohibited",
+    "bearer_tokens_and_session_secrets": "prohibited",
+    "raw_identity_profile_attributes": "prohibited_unless_separately_authorized_and_required",
+    "raw_user_content": "prohibited",
+    "preferred_content": "opaque subject or service identifiers, bounded authentication or authorization outcomes, reason codes, session or credential state, freshness, evidence references, and optional digests"
+  },
+  "authority_rules": [
+    "GoreeCloud Identity remains authoritative for GoreeCloud identity, authentication, platform authorization, account, device, credential, session, and delegated-authority assertions.",
+    "Mesh may verify, transport, persist, correlate, and present minimized Identity evidence but cannot mint, extend, reinterpret, or upgrade Identity authority.",
+    "A valid Identity assertion does not independently authorize a Privacy Shield data-use purpose, establish a Wardveil security outcome, prove Everkeep recoverability, or establish Glaze UI design conformance.",
+    "Privacy Shield remains authoritative for privacy and data-use authorization even when the requesting actor is authenticated by GoreeCloud Identity.",
+    "Wardveil remains authoritative for security evaluation and protection outcomes involving an authenticated identity.",
+    "Glaze UI may present Identity evidence but cannot create or strengthen identity, authentication, authorization, account, device, credential, or session truth.",
+    "Identity evidence transported through Mesh must be minimized and must never contain reusable credentials, private signing material, recovery secrets, or session bearer secrets."
+  ],
+  "status": "source-profile",
+  "production_acceptance": false
+}
