@@ -39,7 +39,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check "pytest==9.1.1"
 
       - name: Validate consumer directory privacy contract
-        run: python -m pytest -q tests/goreecloud/test_consumer_directory.py
+        run: python -m pytest -q -c /dev/null tests/goreecloud/test_consumer_directory.py
 
       - name: Compile consumer directory source
         run: python -m py_compile authentik/goreecloud/consumer_directory.py
