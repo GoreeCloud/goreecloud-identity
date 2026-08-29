@@ -67,7 +67,8 @@ class DirectoryEntry:
         subject = str(self.subject or "").strip()
         if not subject or len(subject) > _MAX_SUBJECT_LENGTH:
             raise ValueError(
-                f"subject must be a non-empty opaque identifier up to {_MAX_SUBJECT_LENGTH} characters"
+                "subject must be a non-empty opaque identifier up to "
+                f"{_MAX_SUBJECT_LENGTH} characters"
             )
         handle = normalize_handle(self.handle)
         display_name = str(self.display_name or "").strip()
