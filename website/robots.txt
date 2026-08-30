@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://identity.goreecloud.com/sitemap.xml
