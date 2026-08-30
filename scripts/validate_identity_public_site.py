@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE = ROOT / "website"
+SITE = ROOT / "identity-center-site"
 DIST = ROOT / "dist"
 REQUIRED = (
     "index.html", "style.css", "glaze-ui-2.0.0.css", "app.js", "_headers",

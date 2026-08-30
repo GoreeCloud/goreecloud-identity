@@ -16,11 +16,15 @@ The Cloudflare project and DNS/custom-domain binding are deployment operations s
 
 ## Source layout
 
-- `website/` — reviewed public source
-- `website/assets/identity.svg` — byte-identical consumer derivative of `products/identity/app-icon.svg` from `GoreeCloud/goreecloud-branding-assets`
+- `identity-center-site/` — reviewed standalone public source, deliberately isolated from the inherited authentik `website/` Docusaurus workspace
+- `identity-center-site/assets/identity.svg` — byte-identical consumer derivative of `products/identity/app-icon.svg` from `GoreeCloud/goreecloud-branding-assets`
 - `scripts/build_identity_public_site.py` — creates the isolated `dist/` artifact
 - `scripts/validate_identity_public_site.py` — validates branding provenance, Glaze UI markers, security headers, truth boundaries, and artifact identity
 - `.github/workflows/validate-website.yml` — exact-revision CI gate
+
+## Repository-boundary rule
+
+The inherited authentik-derived `website/` directory remains a transitional upstream documentation workspace. Identity Center must not place standalone public-site files in that directory or depend on its package manager, Docusaurus build, formatting rules, or publication lifecycle. This separation prevents the native GoreeCloud public surface from becoming coupled to inherited product documentation architecture.
 
 ## Public truth boundary
 

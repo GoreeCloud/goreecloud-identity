@@ -3,16 +3,17 @@ from pathlib import Path
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "identity-center-site"
 DIST = ROOT / "dist"
 FILES = {
-    ROOT / "website" / "index.html": DIST / "index.html",
-    ROOT / "website" / "style.css": DIST / "style.css",
-    ROOT / "website" / "glaze-ui-2.0.0.css": DIST / "glaze-ui-2.0.0.css",
-    ROOT / "website" / "app.js": DIST / "app.js",
-    ROOT / "website" / "_headers": DIST / "_headers",
-    ROOT / "website" / "robots.txt": DIST / "robots.txt",
-    ROOT / "website" / "sitemap.xml": DIST / "sitemap.xml",
-    ROOT / "website" / "assets" / "identity.svg": DIST / "assets" / "identity.svg",
+    SOURCE / "index.html": DIST / "index.html",
+    SOURCE / "style.css": DIST / "style.css",
+    SOURCE / "glaze-ui-2.0.0.css": DIST / "glaze-ui-2.0.0.css",
+    SOURCE / "app.js": DIST / "app.js",
+    SOURCE / "_headers": DIST / "_headers",
+    SOURCE / "robots.txt": DIST / "robots.txt",
+    SOURCE / "sitemap.xml": DIST / "sitemap.xml",
+    SOURCE / "assets" / "identity.svg": DIST / "assets" / "identity.svg",
 }
 
 if DIST.exists():
