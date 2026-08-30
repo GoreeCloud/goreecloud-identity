@@ -59,6 +59,8 @@ for directive in (
 ):
     if directive not in headers:
         raise SystemExit(f"Identity Center security header marker missing: {directive}")
+if not headers.startswith("/*\n  X-Content-Type-Options: nosniff") or "\n*/" in headers:
+    raise SystemExit("Identity Center _headers must use Cloudflare Pages route syntax, not CSS comment syntax")
 
 for marker in ("prefers-reduced-motion", "prefers-reduced-transparency", "forced-colors", "--g-touch:48px"):
     if marker not in css:
