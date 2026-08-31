@@ -21,7 +21,7 @@ def mesh_service_token_jwks(request: HttpRequest) -> JsonResponse:
     try:
         issuer = MeshServiceTokenIssuer.from_environment()
         response = JsonResponse(issuer.jwks())
-    except Exception as exc:  # fail closed at the public verification boundary
+    except ValueError as exc:
         LOGGER.error(
             "GoreeCloud Mesh JWKS unavailable",
             error_type=type(exc).__name__,
