@@ -2,6 +2,7 @@
 import re
 from hashlib import sha1
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from build_identity_public_site import build
 
@@ -28,6 +29,18 @@ def git_blob_sha(data: bytes) -> str:
 
     payload = f"blob {len(data)}\0".encode() + data
     return sha1(payload, usedforsecurity=False).hexdigest()
+
+
+def approved_external_url(value: str) -> bool:
+    """Allow only exact HTTPS GoreeCloud web hosts or the GoreeCloud GitHub org."""
+
+    parsed = urlsplit(value)
+    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port:
+        return False
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if host == "github.com":
+        return parsed.path == "/GoreeCloud" or parsed.path.startswith("/GoreeCloud/")
+    return host == "goreecloud.com" or host.endswith(".goreecloud.com")
 
 
 for relative in REQUIRED:
@@ -99,9 +112,9 @@ if git_blob_sha(icon) != APPROVED_ICON_GIT_BLOB_SHA:
     )
 
 for src in re.findall(r'(?:src|href)=["\']([^"\']+)', html):
-    is_external = src.startswith(("http://", "https://"))
-    is_approved = "github.com/GoreeCloud/" in src or "goreecloud.com/" in src
-    if is_external and not is_approved:
+    if src.startswith("//"):
+        raise SystemExit(f"protocol-relative resource is not allowed: {src}")
+    if src.startswith(("http://", "https://")) and not approved_external_url(src):
         raise SystemExit(f"unauthorized external link/resource: {src}")
 
 for directive in (
