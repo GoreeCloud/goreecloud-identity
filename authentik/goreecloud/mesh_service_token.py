@@ -10,13 +10,13 @@ select an arbitrary GoreeCloud service identity or escalate Mesh scopes.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
 import json
 import os
-from pathlib import Path
 import re
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import uuid4
 
 import jwt
@@ -26,7 +26,9 @@ from jwt.algorithms import RSAAlgorithm
 
 ISSUER = "goreecloud-identity"
 AUDIENCE = "goreecloud-mesh"
+DEFAULT_LIFETIME_SECONDS = 300
 MAX_LIFETIME_SECONDS = 900
+MAX_JTI_LENGTH = 200
 MIN_RSA_KEY_SIZE_BITS = 2048
 ACTIVE_KID_ENV = "GOREECLOUD_MESH_ACTIVE_KID"
 ACTIVE_PRIVATE_KEY_FILE_ENV = "GOREECLOUD_MESH_ACTIVE_PRIVATE_KEY_FILE"
@@ -71,7 +73,9 @@ class VerifiedWorkloadPrincipal:
     def __post_init__(self) -> None:
         service_id = str(self.service_id or "").strip()
         if not _SERVICE_ID_RE.fullmatch(service_id):
-            raise ValueError("service_id must be a canonical lowercase GoreeCloud service identifier")
+            raise ValueError(
+                "service_id must be a canonical lowercase GoreeCloud service identifier"
+            )
 
         scopes = _normalize_scopes(self.allowed_scopes)
         unknown = sorted(set(scopes) - _ALLOWED_SCOPES)
@@ -80,7 +84,9 @@ class VerifiedWorkloadPrincipal:
 
         authentication_context = str(self.authentication_context or "").strip()
         if not _AUTH_CONTEXT_RE.fullmatch(authentication_context):
-            raise ValueError("authentication_context must identify the verified workload authentication")
+            raise ValueError(
+                "authentication_context must identify the verified workload authentication"
+            )
 
         object.__setattr__(self, "service_id", service_id)
         object.__setattr__(self, "allowed_scopes", frozenset(scopes))
@@ -107,14 +113,18 @@ class MeshVerificationKey:
         *,
         kid: str,
         path: str | os.PathLike[str],
-    ) -> "MeshVerificationKey":
+    ) -> MeshVerificationKey:
         key_path = Path(path)
         if not key_path.is_file():
-            raise ValueError(f"Mesh verification key file does not exist or is not a file: {key_path}")
+            raise ValueError(
+                f"Mesh verification key file does not exist or is not a file: {key_path}"
+            )
         try:
             loaded = serialization.load_pem_public_key(key_path.read_bytes())
         except (OSError, TypeError, ValueError) as exc:
-            raise ValueError(f"Mesh verification key file is not a valid PEM public key: {key_path}") from exc
+            raise ValueError(
+                f"Mesh verification key file is not a valid PEM public key: {key_path}"
+            ) from exc
         if not isinstance(loaded, rsa.RSAPublicKey):
             raise ValueError("Mesh service-token verification keys must be RSA public keys")
         return cls(kid=_validate_kid(kid), public_key=loaded)
@@ -138,12 +148,19 @@ class MeshSigningKey:
             raise ValueError("Mesh service-token RSA keys must be at least 2048 bits")
 
     @classmethod
-    def from_private_key_file(cls, *, kid: str, path: str | os.PathLike[str]) -> "MeshSigningKey":
+    def from_private_key_file(
+        cls,
+        *,
+        kid: str,
+        path: str | os.PathLike[str],
+    ) -> MeshSigningKey:
         """Load an Identity-owned PEM key from a runtime secret file."""
 
         key_path = Path(path)
         if not key_path.is_file():
-            raise ValueError(f"Mesh signing key file does not exist or is not a file: {key_path}")
+            raise ValueError(
+                f"Mesh signing key file does not exist or is not a file: {key_path}"
+            )
         try:
             loaded = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
         except (OSError, TypeError, ValueError) as exc:
@@ -155,7 +172,10 @@ class MeshSigningKey:
         return cls(kid=_validate_kid(kid), private_key=loaded)
 
     def verification_key(self) -> MeshVerificationKey:
-        return MeshVerificationKey(kid=self.kid, public_key=self.private_key.public_key())
+        return MeshVerificationKey(
+            kid=self.kid,
+            public_key=self.private_key.public_key(),
+        )
 
     def public_jwk(self) -> dict[str, object]:
         return self.verification_key().public_jwk()
@@ -175,7 +195,10 @@ class MeshServiceTokenIssuer:
         )
         if not all(isinstance(key, MeshVerificationKey) for key in retained_public):
             raise ValueError("retained Mesh keys must be public verification keys")
-        keys: tuple[MeshSigningKey | MeshVerificationKey, ...] = (active_key, *retained_public)
+        keys: tuple[MeshSigningKey | MeshVerificationKey, ...] = (
+            active_key,
+            *retained_public,
+        )
         kids = [key.kid for key in keys]
         if len(kids) != len(set(kids)):
             raise ValueError("Mesh signing key ids must be unique")
@@ -189,8 +212,11 @@ class MeshServiceTokenIssuer:
         active_kid: str,
         active_private_key_file: str | os.PathLike[str],
         retained_public_key_files: Mapping[str, str | os.PathLike[str]] | None = None,
-    ) -> "MeshServiceTokenIssuer":
-        active = MeshSigningKey.from_private_key_file(kid=active_kid, path=active_private_key_file)
+    ) -> MeshServiceTokenIssuer:
+        active = MeshSigningKey.from_private_key_file(
+            kid=active_kid,
+            path=active_private_key_file,
+        )
         retained = [
             MeshVerificationKey.from_public_key_file(kid=kid, path=path)
             for kid, path in (retained_public_key_files or {}).items()
@@ -198,7 +224,10 @@ class MeshServiceTokenIssuer:
         return cls(active, retained)
 
     @classmethod
-    def from_environment(cls, environ: Mapping[str, str] | None = None) -> "MeshServiceTokenIssuer":
+    def from_environment(
+        cls,
+        environ: Mapping[str, str] | None = None,
+    ) -> MeshServiceTokenIssuer:
         """Build the issuer from secret/public-key file references.
 
         The active private key is read only from an Identity-owned secret file.
@@ -211,7 +240,8 @@ class MeshServiceTokenIssuer:
         active_file = str(env.get(ACTIVE_PRIVATE_KEY_FILE_ENV, "")).strip()
         if not active_kid or not active_file:
             raise ValueError(
-                f"{ACTIVE_KID_ENV} and {ACTIVE_PRIVATE_KEY_FILE_ENV} are required for Mesh token issuance"
+                f"{ACTIVE_KID_ENV} and {ACTIVE_PRIVATE_KEY_FILE_ENV} are required "
+                "for Mesh token issuance"
             )
 
         retained_raw = str(env.get(RETAINED_PUBLIC_KEY_FILES_ENV, "{}")).strip() or "{}"
@@ -241,6 +271,7 @@ class MeshServiceTokenIssuer:
 
     def jwks(self) -> dict[str, object]:
         """Return only public verification material, active key first."""
+
         return {"keys": [key.public_jwk() for key in self._keys]}
 
     def issue_for_principal(
@@ -248,7 +279,7 @@ class MeshServiceTokenIssuer:
         *,
         principal: VerifiedWorkloadPrincipal,
         requested_scopes: Iterable[str],
-        lifetime_seconds: int = 300,
+        lifetime_seconds: int = DEFAULT_LIFETIME_SECONDS,
         now: datetime | None = None,
         not_before: datetime | None = None,
         jti: str | None = None,
@@ -296,7 +327,7 @@ class MeshServiceTokenIssuer:
             raise ValueError("not_before cannot exceed the allowed 60-second clock skew")
         expires_at = issued_at + timedelta(seconds=lifetime_seconds)
         token_id = str(jti or uuid4()).strip()
-        if not token_id or len(token_id) > 200:
+        if not token_id or len(token_id) > MAX_JTI_LENGTH:
             raise ValueError("jti must be a non-empty opaque identifier")
 
         claims = {
