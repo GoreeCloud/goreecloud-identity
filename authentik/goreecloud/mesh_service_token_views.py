@@ -5,7 +5,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET
 from structlog.stdlib import get_logger
 
-from authentik.goreecloud.mesh_service_token import MeshServiceTokenIssuer
+from goreecloud_identity.mesh_service_token import MeshServiceTokenIssuer
 
 LOGGER = get_logger()
 
@@ -14,8 +14,10 @@ LOGGER = get_logger()
 def mesh_service_token_jwks(request: HttpRequest) -> JsonResponse:
     """Publish Identity's public Mesh verification keys.
 
-    This endpoint never issues credentials and never returns private key
-    material. Missing or invalid runtime key configuration fails closed.
+    This transitional Authentik endpoint delegates key/JWKS semantics to the
+    native GoreeCloud Identity authority. It never issues credentials and never
+    returns private key material. Missing or invalid runtime key configuration
+    fails closed.
     """
 
     try:
