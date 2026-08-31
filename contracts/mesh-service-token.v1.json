@@ -1,10 +1,13 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "token_profile": "goreecloud-identity.mesh-service-token.v1",
   "issuer": "goreecloud-identity",
   "audience": "goreecloud-mesh",
   "runtime_implementation": {
-    "issuer_module": "authentik/goreecloud/mesh_service_token.py",
+    "issuer_module": "goreecloud_identity/mesh_service_token.py",
+    "native_authority": true,
+    "transitional_authentik_compatibility_module": "authentik/goreecloud/mesh_service_token.py",
+    "transitional_jwks_view": "authentik/goreecloud/mesh_service_token_views.py",
     "tests": "tests/goreecloud/test_mesh_service_token.py",
     "ci_workflow": ".github/workflows/goreecloud-mesh-service-token.yml",
     "issuer_implemented": true,
@@ -59,8 +62,9 @@
     "service_id must match the authenticated workload identity represented by sub",
     "consumers must validate signature, issuer, audience, expiry, not-before, service identity, required scope, kid profile, RSA key strength, and RSA public exponent",
     "JWKS consumers must require application/json and must reject redirected or otherwise untrusted key-source transport",
-    "unknown or invalid kid, unsupported algorithm, missing required claim, malformed scope, invalid key material, or invalid temporal claim must fail closed"
+    "unknown or invalid kid, unsupported algorithm, missing required claim, malformed scope, invalid key material, or invalid temporal claim must fail closed",
+    "transitional framework integrations must delegate service-token semantics to the native goreecloud_identity authority"
   ],
-  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live service-token issuance, rotation evidence, and successful end-to-end Mesh verification.",
+  "deployment_boundary": "The first-party GoreeCloud Identity token authority and JWKS generation are implemented in the native goreecloud_identity package. The current Authentik surface is a transitional compatibility/integration layer only. Production acceptance still requires durable Identity-managed signing-key storage, a deployed native or explicitly approved transitional JWKS endpoint, live service-token issuance, rotation evidence, successful end-to-end Mesh verification, and completion of the broader native Identity rebuild.",
   "production_acceptance": false
 }
