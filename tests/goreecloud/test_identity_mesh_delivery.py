@@ -62,7 +62,9 @@ class FakeOpener:
         return self.response
 
 
-def accepted_payload(evidence_id: str = "identity-authentication-001") -> dict[str, object]:
+def accepted_payload(
+    evidence_id: str = "identity-authentication-001",
+) -> dict[str, object]:
     return {
         "envelope": {"id": evidence_id},
         "replayed": False,
