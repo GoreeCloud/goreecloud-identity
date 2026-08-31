@@ -8,10 +8,12 @@ from build_identity_public_site import build
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "identity-center-site"
 DIST = ROOT / "dist"
+GLAZE_ASSET = "glaze-ui-2.1.0.css"
+GLAZE_PROMOTION_REVISION = "c49113eb8b93c267613fdf1bbca1f814495acad7"
 REQUIRED = (
     "index.html",
     "style.css",
-    "glaze-ui-2.0.0.css",
+    GLAZE_ASSET,
     "app.js",
     "_headers",
     "robots.txt",
@@ -35,6 +37,7 @@ for relative in REQUIRED:
 
 html = (SITE / "index.html").read_text(encoding="utf-8")
 css = (SITE / "style.css").read_text(encoding="utf-8")
+glaze = (SITE / GLAZE_ASSET).read_text(encoding="utf-8")
 headers = (SITE / "_headers").read_text(encoding="utf-8")
 icon = (SITE / "assets/identity.svg").read_bytes()
 
@@ -55,8 +58,10 @@ for marker in (
     "Production identity remains a separate acceptance gate",
     "Not yet accepted",
     "authentik-derived transitional runtime",
-    'name="goreecloud-glaze-ui" content="2.0.0"',
-    'data-glaze-ui="2.0.0"',
+    'name="goreecloud-glaze-ui" content="2.1.0"',
+    'data-glaze-ui="2.1.0"',
+    'class="topbar glaze-material-soft"',
+    'class="glaze-navigation-capsule"',
 ):
     if marker not in html:
         raise SystemExit(f"Identity Center marker missing: {marker}")
@@ -67,11 +72,26 @@ for forbidden in (
     "fully migrated",
     "fully deployed",
     "permanent authentik architecture",
+    "glaze-ui-2.0.0.css",
+    'data-glaze-ui="2.0.0"',
     "data:image",
     "raw.githubusercontent.com",
 ):
     if forbidden in html:
         raise SystemExit(f"Identity Center publishes forbidden or misleading marker: {forbidden}")
+
+if "Content is solid. Interaction is glazed." not in glaze:
+    raise SystemExit("Identity Center Glaze UI 2.1 material rule is missing")
+if GLAZE_PROMOTION_REVISION not in glaze:
+    raise SystemExit("Identity Center Glaze UI 2.1 promotion reference is missing")
+if "--glaze-touch-min:48px" not in glaze or "--glaze-touch-assisted:56px" not in glaze:
+    raise SystemExit("Identity Center Glaze UI 2.1 touch floors are missing")
+if "--g-touch-assisted:56px" not in css:
+    raise SystemExit("Identity Center Touch Assistance fallback is missing")
+if "background:var(--g-surface-strong)" not in css:
+    raise SystemExit("Identity Center durable-content solid material marker is missing")
+if ".topbar nav{display:flex;order:3;width:100%" not in css:
+    raise SystemExit("Identity Center responsive primary-navigation fallback is missing")
 
 if git_blob_sha(icon) != APPROVED_ICON_GIT_BLOB_SHA:
     raise SystemExit(
@@ -101,6 +121,7 @@ if not headers.startswith("/*\n  X-Content-Type-Options: nosniff") or "\n*/" in 
 for marker in (
     "prefers-reduced-motion",
     "prefers-reduced-transparency",
+    "prefers-contrast:more",
     "forced-colors",
     "--g-touch:48px",
 ):
@@ -115,4 +136,6 @@ for relative in REQUIRED:
         raise SystemExit(
             f"isolated Identity Center artifact drifted from reviewed source: {relative}"
         )
-print("Identity Center public website validation passed")
+if (DIST / "glaze-ui-2.0.0.css").exists():
+    raise SystemExit("obsolete Glaze UI 2.0 asset leaked into Identity Center artifact")
+print("Identity Center public website validation passed with Glaze UI 2.1.0 Stable")
