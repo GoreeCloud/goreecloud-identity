@@ -4,6 +4,7 @@ The substantive implementation now lives in ``goreecloud_identity.mesh_service_t
 This module remains temporarily so inherited Authentik integration and older imports
 continue to resolve while the native GoreeCloud Identity runtime is built out.
 """
+
 from goreecloud_identity.mesh_service_token import (
     ACTIVE_KID_ENV,
     ACTIVE_PRIVATE_KEY_FILE_ENV,
