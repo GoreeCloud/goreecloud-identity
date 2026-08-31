@@ -1,4 +1,5 @@
 """HTTP verification surface for GoreeCloud Mesh service credentials."""
+
 from __future__ import annotations
 
 from django.http import HttpRequest, JsonResponse
