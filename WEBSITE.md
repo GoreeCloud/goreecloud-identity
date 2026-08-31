@@ -14,12 +14,23 @@ GoreeCloud Identity owns the standalone **Identity Center** public website sourc
 
 The Cloudflare project and DNS/custom-domain binding are deployment operations separate from source implementation. The website must not be described as publicly deployed until those operations and production verification are complete.
 
+## Glaze UI contract
+
+Identity Center targets **Glaze UI 2.1.0 Stable**, promoted from canonical design-system revision `c49113eb8b93c267613fdf1bbca1f814495acad7`.
+
+The site follows the 2.1 material rule **Content is solid. Interaction is glazed.** Durable identity, authority, policy, scope, and acceptance content remains on solid surfaces. Navigation, appropriate controls, and the bounded hero overview may use controlled Glaze material.
+
+The public surface carries the 48px general interaction floor, 56px Touch Assistance floor, density and clarity semantics, large-text compatibility, reduced-motion and reduced-transparency handling, increased/forced-contrast resilience, safe-area behavior, and responsive navigation across desktop, tablet, and mobile.
+
+Glaze UI controls presentation only. It does not establish production Identity acceptance, authentication correctness, authorization authority, credential custody, recovery readiness, or application migration.
+
 ## Source layout
 
 - `identity-center-site/` — reviewed standalone public source, deliberately isolated from the inherited authentik `website/` Docusaurus workspace
 - `identity-center-site/assets/identity.svg` — byte-identical consumer derivative of `products/identity/app-icon.svg` from `GoreeCloud/goreecloud-branding-assets`
+- `identity-center-site/glaze-ui-2.1.0.css` — same-origin Glaze UI 2.1.0 Stable public integration bundle
 - `scripts/build_identity_public_site.py` — creates the isolated `dist/` artifact
-- `scripts/validate_identity_public_site.py` — validates branding provenance, Glaze UI markers, security headers, truth boundaries, and artifact identity
+- `scripts/validate_identity_public_site.py` — validates branding provenance, Glaze UI markers, security headers, truth boundaries, responsive/accessibility behavior, and artifact identity
 - `.github/workflows/validate-website.yml` — exact-revision CI gate
 
 ## Repository-boundary rule
