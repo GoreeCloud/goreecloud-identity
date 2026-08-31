@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "identity-center-site"
@@ -16,11 +16,19 @@ FILES = {
     SOURCE / "assets" / "identity.svg": DIST / "assets" / "identity.svg",
 }
 
-if DIST.exists():
-    shutil.rmtree(DIST)
-for source, target in FILES.items():
-    if not source.is_file() or source.is_symlink():
-        raise SystemExit(f"missing or unsafe public source: {source.relative_to(ROOT)}")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, target)
-print(f"Built Identity Center public site: {len(FILES)} files -> dist/")
+
+def build() -> None:
+    """Build the isolated Identity Center public artifact from reviewed source."""
+
+    if DIST.exists():
+        shutil.rmtree(DIST)
+    for source, target in FILES.items():
+        if not source.is_file() or source.is_symlink():
+            raise SystemExit(f"missing or unsafe public source: {source.relative_to(ROOT)}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+    print(f"Built Identity Center public site: {len(FILES)} files -> dist/")
+
+
+if __name__ == "__main__":
+    build()
