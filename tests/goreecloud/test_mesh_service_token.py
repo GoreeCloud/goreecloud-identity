@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 
 import jwt
 import pytest
@@ -10,6 +10,7 @@ from authentik.goreecloud.mesh_service_token import (
     ACTIVE_KID_ENV,
     ACTIVE_PRIVATE_KEY_FILE_ENV,
     AUDIENCE,
+    DEFAULT_LIFETIME_SECONDS,
     ISSUER,
     RETAINED_PUBLIC_KEY_FILES_ENV,
     MeshServiceTokenIssuer,
@@ -61,7 +62,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     token = issuer.issue_for_principal(
         principal=principal("wardveil-security", "mesh.evidence.write"),
         requested_scopes=["mesh.evidence.write"],
-        lifetime_seconds=300,
+        lifetime_seconds=DEFAULT_LIFETIME_SECONDS,
         now=now,
         jti="wardveil-test-001",
     )
@@ -81,7 +82,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     assert claims["sub"] == "service:wardveil-security"
     assert claims["service_id"] == "wardveil-security"
     assert claims["scope"] == "mesh.evidence.write"
-    assert claims["exp"] - claims["iat"] == 300
+    assert claims["exp"] - claims["iat"] == DEFAULT_LIFETIME_SECONDS
     assert claims["jti"] == "wardveil-test-001"
 
 
