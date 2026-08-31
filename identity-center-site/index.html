@@ -1,28 +1,29 @@
 <!doctype html>
-<html lang="en" data-theme="system">
+<html lang="en" data-theme="system" data-glaze-density="standard" data-glaze-clarity="balanced">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="GoreeCloud Identity Center — the platform identity surface for accounts, authentication, authorization, devices, sessions, credentials, service identity, delegation, and recovery.">
-  <meta name="goreecloud-glaze-ui" content="2.0.0">
+  <meta name="goreecloud-glaze-ui" content="2.1.0">
   <title>Identity Center — GoreeCloud</title>
   <link rel="icon" href="/assets/identity.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/glaze-ui-2.0.0.css" data-glaze-ui="2.0.0">
+  <link rel="stylesheet" href="/glaze-ui-2.1.0.css" data-glaze-ui="2.1.0">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="glaze-canvas">
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="topbar">
+  <header class="topbar glaze-material-soft">
     <div class="shell topbar-inner">
       <a class="brand" href="#top" aria-label="Identity Center home">
         <img src="/assets/identity.svg" width="42" height="42" alt="">
         <span><strong>GoreeCloud Identity</strong><small>Identity Center</small></span>
       </a>
-      <nav aria-label="Primary">
+      <nav class="glaze-navigation-capsule" aria-label="Primary">
         <a href="#scope">Scope</a>
         <a href="#principles">Principles</a>
         <a href="#status">Status</a>
+        <a href="https://design.goreecloud.com/">Design</a>
         <a href="https://github.com/GoreeCloud/goreecloud-identity">Source</a>
       </nav>
       <button class="theme-toggle" type="button" data-theme-toggle aria-label="Change appearance">Appearance</button>
@@ -36,8 +37,8 @@
         <h1>One identity.<br>Clear authority everywhere.</h1>
         <p class="lede">GoreeCloud Identity is the platform authority for identities, authentication, authorization, accounts, devices, credentials, sessions, application and service identity, and delegated authority across participating GoreeCloud systems.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#scope">Explore Identity Center</a>
-          <a class="button" href="https://github.com/GoreeCloud/goreecloud-identity">View source</a>
+          <a class="button primary glaze-button" href="#scope">Explore Identity Center</a>
+          <a class="button glaze-button" href="https://github.com/GoreeCloud/goreecloud-identity">View source</a>
         </div>
         <p class="truth-note">Identity Center is under native development. The repository still contains a substantial authentik-derived transitional runtime, and production GoreeCloud Identity is not yet accepted.</p>
       </div>
@@ -85,14 +86,14 @@
     </section>
 
     <section class="section shell status-section" id="status" aria-labelledby="status-title">
-      <div class="status-panel glaze-material">
+      <div class="status-panel">
         <div>
           <p class="eyebrow">Current implementation boundary</p>
           <h2 id="status-title">Native Identity work is real. Production identity remains a separate acceptance gate.</h2>
         </div>
         <div class="status-columns">
           <div><h3>Current GoreeCloud-owned work</h3><ul><li>Native Identity authority and platform-integration contracts</li><li>GoreeCloud-owned Mesh evidence schema/profile and delivery client</li><li>Strict producer binding and cross-domain evidence restrictions</li><li>HTTPS-only non-loopback delivery policy and redirect refusal</li><li>Credential non-disclosure and receipt-binding regression tests</li><li>Native-build guardrails around the transitional inherited tree</li></ul></div>
-          <div><h3>Still required before production acceptance</h3><ul><li>Complete native Identity Center and approved production runtime boundaries</li><li>Protected signing/JWKS/key custody and production service-token issuance</li><li>Validated authentication, authorization, session, MFA, passkey, and recovery workflows for the approved scope</li><li>Break-glass, backup, restore, monitoring, and rollback evidence</li><li>Controlled application integration and failure-mode acceptance</li><li>Current Glaze UI, Wardveil, Privacy Shield, and Everkeep acceptance plus explicit production approval</li></ul></div>
+          <div><h3>Still required before production acceptance</h3><ul><li>Complete native Identity Center and approved production runtime boundaries</li><li>Protected signing/JWKS/key custody and production service-token issuance</li><li>Validated authentication, authorization, session, MFA, passkey, and recovery workflows for the approved scope</li><li>Break-glass, backup, restore, monitoring, and rollback evidence</li><li>Controlled application integration and failure-mode acceptance</li><li>Glaze UI 2.1.0 Stable consumer acceptance plus current Wardveil, Privacy Shield, and Everkeep acceptance and explicit production approval</li></ul></div>
         </div>
         <p class="baseline">Website truth baseline: GoreeCloud Identity main through <code>ddd86f636b6fb7b2036186021289c4129e02f3a5</code>. The inherited authentik-derived runtime is transitional and is not presented as the permanent GoreeCloud Identity architecture.</p>
       </div>
@@ -101,7 +102,7 @@
 
   <footer class="footer shell">
     <div><strong>GoreeCloud Identity</strong><span>Identity Center · trusted identity with explicit authority boundaries</span></div>
-    <nav aria-label="Footer"><a href="https://www.goreecloud.com/">GoreeCloud</a><a href="https://projects.goreecloud.com/">Projects</a><a href="https://github.com/GoreeCloud/goreecloud-identity">GitHub</a></nav>
+    <nav aria-label="Footer"><a href="https://www.goreecloud.com/">GoreeCloud</a><a href="https://projects.goreecloud.com/">Projects</a><a href="https://design.goreecloud.com/">Design Center</a><a href="https://github.com/GoreeCloud/goreecloud-identity">GitHub</a></nav>
   </footer>
   <script src="/app.js" defer></script>
 </body>
