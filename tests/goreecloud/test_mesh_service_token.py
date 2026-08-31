@@ -220,7 +220,8 @@ def test_rejects_unknown_principal_scope_excessive_lifetime_and_invalid_service_
 
 
 def test_rejects_weak_keys_duplicate_kids_and_naive_time() -> None:
-    weak = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    # Intentional negative control: production code must reject RSA keys below 2048 bits.
+    weak = rsa.generate_private_key(public_exponent=65537, key_size=1024)  # nosec B505
     with pytest.raises(ValueError, match="at least 2048 bits"):
         MeshSigningKey(kid="mesh-key-weak", private_key=weak)
 
