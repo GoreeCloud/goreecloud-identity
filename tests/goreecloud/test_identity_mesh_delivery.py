@@ -6,6 +6,8 @@ import pytest
 
 from goreecloud_identity.mesh_delivery import MeshDeliveryClient, MeshDeliveryError
 
+DELIVERY_TIMEOUT_SECONDS = 3.0
+
 
 def envelope() -> dict[str, object]:
     return {
@@ -90,7 +92,10 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
 
     submitted = envelope()
     token = "short-lived-identity-token"
-    client = MeshDeliveryClient("https://mesh.goreecloud.com", timeout_seconds=3)
+    client = MeshDeliveryClient(
+        "https://mesh.goreecloud.com",
+        timeout_seconds=DELIVERY_TIMEOUT_SECONDS,
+    )
     receipt = client.deliver(submitted, bearer_token=token)
 
     assert receipt.evidence_id == submitted["id"]
@@ -98,7 +103,7 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
     assert receipt.replayed is False
     assert token not in repr(receipt)
     assert token not in json.dumps(submitted)
-    assert fake.last_timeout == 3.0
+    assert fake.last_timeout == DELIVERY_TIMEOUT_SECONDS
     assert fake.last_request.full_url == "https://mesh.goreecloud.com/v1/evidence/envelopes"
     assert fake.last_request.get_header("Authorization") == f"Bearer {token}"
 
@@ -126,18 +131,24 @@ def test_delivery_refuses_redirect(monkeypatch) -> None:
     monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
 
     with pytest.raises(MeshDeliveryError, match="refused an HTTP redirect"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
+            envelope(), bearer_token="token"
+        )
 
 
 def test_delivery_fails_closed_on_receipt_binding_mismatch(monkeypatch) -> None:
     wrong_id = FakeOpener(FakeResponse(accepted_payload("different-evidence-id")))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_id)
     with pytest.raises(MeshDeliveryError, match="submitted evidence id"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
+            envelope(), bearer_token="token"
+        )
 
     wrong_service_payload = accepted_payload()
     wrong_service_payload["producer_service_id"] = "privacy-shield"
     wrong_service = FakeOpener(FakeResponse(wrong_service_payload))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_service)
     with pytest.raises(MeshDeliveryError, match="GoreeCloud Identity service identity"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
+            envelope(), bearer_token="token"
+        )
