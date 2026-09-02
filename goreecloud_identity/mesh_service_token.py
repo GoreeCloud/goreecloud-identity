@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -29,6 +30,7 @@ AUDIENCE = "goreecloud-mesh"
 DEFAULT_LIFETIME_SECONDS = 300
 MAX_LIFETIME_SECONDS = 900
 MAX_JTI_LENGTH = 200
+MAX_PRIVATE_KEY_FILE_BYTES = 64 * 1024
 MIN_RSA_KEY_SIZE_BITS = 2048
 ACTIVE_KID_ENV = "GOREECLOUD_MESH_ACTIVE_KID"
 ACTIVE_PRIVATE_KEY_FILE_ENV = "GOREECLOUD_MESH_ACTIVE_PRIVATE_KEY_FILE"
@@ -60,6 +62,57 @@ def _validate_kid(kid: str) -> str:
 def _public_jwk(kid: str, public_key: rsa.RSAPublicKey) -> dict[str, object]:
     jwk = RSAAlgorithm.to_jwk(public_key, as_dict=True)
     return {**jwk, "kid": kid, "use": "sig", "alg": "RS256"}
+
+
+def _read_private_key_file(path: str | os.PathLike[str]) -> tuple[Path, bytes]:
+    """Read a bounded owner-only regular key file without following symlinks."""
+
+    key_path = Path(path)
+    if key_path.is_symlink():
+        raise ValueError(f"Mesh signing key file must not be a symbolic link: {key_path}")
+
+    flags = os.O_RDONLY
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    if nofollow:
+        flags |= nofollow
+    try:
+        descriptor = os.open(key_path, flags)
+    except OSError as exc:
+        raise ValueError(
+            f"Mesh signing key file does not exist or cannot be opened safely: {key_path}"
+        ) from exc
+
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"Mesh signing key file must be a regular file: {key_path}")
+        if os.name == "posix" and stat.S_IMODE(metadata.st_mode) & 0o077:
+            raise ValueError(
+                f"Mesh signing key file must use owner-only permissions: {key_path}"
+            )
+        if metadata.st_size <= 0 or metadata.st_size > MAX_PRIVATE_KEY_FILE_BYTES:
+            raise ValueError(
+                "Mesh signing key file must be non-empty and no larger than "
+                f"{MAX_PRIVATE_KEY_FILE_BYTES} bytes: {key_path}"
+            )
+
+        chunks: list[bytes] = []
+        remaining = MAX_PRIVATE_KEY_FILE_BYTES + 1
+        while remaining > 0:
+            chunk = os.read(descriptor, remaining)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        material = b"".join(chunks)
+        if not material or len(material) > MAX_PRIVATE_KEY_FILE_BYTES:
+            raise ValueError(
+                "Mesh signing key file must be non-empty and no larger than "
+                f"{MAX_PRIVATE_KEY_FILE_BYTES} bytes: {key_path}"
+            )
+        return key_path, material
+    finally:
+        os.close(descriptor)
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,16 +207,12 @@ class MeshSigningKey:
         kid: str,
         path: str | os.PathLike[str],
     ) -> MeshSigningKey:
-        """Load an Identity-owned PEM key from a runtime secret file."""
+        """Load an Identity-owned PEM key from a safely constrained runtime file."""
 
-        key_path = Path(path)
-        if not key_path.is_file():
-            raise ValueError(
-                f"Mesh signing key file does not exist or is not a file: {key_path}"
-            )
+        key_path, material = _read_private_key_file(path)
         try:
-            loaded = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
-        except (OSError, TypeError, ValueError) as exc:
+            loaded = serialization.load_pem_private_key(material, password=None)
+        except (TypeError, ValueError) as exc:
             raise ValueError(
                 f"Mesh signing key file is not a valid unencrypted PEM private key: {key_path}"
             ) from exc
@@ -230,7 +279,8 @@ class MeshServiceTokenIssuer:
     ) -> MeshServiceTokenIssuer:
         """Build the issuer from secret/public-key file references.
 
-        The active private key is read only from an Identity-owned secret file.
+        The active private key is read only from an Identity-owned secret file
+        that is regular, non-symlinked, size-bounded, and owner-only on POSIX.
         Retained rotation keys are public-only PEM files so expired signing
         authority is not retained merely to validate still-live credentials.
         """
