@@ -26,7 +26,15 @@
     "kid_maximum_bytes": 128,
     "verification_keys": "JWKS",
     "jwks_media_type": "application/json",
-    "key_rotation": "new signing keys must be published in JWKS before tokens using them are issued"
+    "key_rotation": "new signing keys must be published in JWKS before tokens using them are issued",
+    "runtime_private_key_file_custody": {
+      "regular_file_required": true,
+      "symbolic_links_allowed": false,
+      "posix_group_or_other_permissions_allowed": false,
+      "maximum_file_bytes": 65536,
+      "private_key_material_exported": false,
+      "production_key_custody_satisfied": false
+    }
   },
   "claims": {
     "iss": "goreecloud-identity",
@@ -57,6 +65,8 @@
   ],
   "security_requirements": [
     "private signing keys never leave GoreeCloud Identity",
+    "runtime private-key files must be regular, non-symlinked, size-bounded, and owner-only on POSIX before PEM parsing",
+    "source-level runtime key-file hardening does not substitute for durable production signing-key custody or managed key lifecycle acceptance",
     "producer systems must not self-sign, mint, or substitute GoreeCloud Mesh service credentials",
     "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
     "service_id must match the authenticated workload identity represented by sub",
@@ -65,6 +75,6 @@
     "unknown or invalid kid, unsupported algorithm, missing required claim, malformed scope, invalid key material, or invalid temporal claim must fail closed",
     "transitional framework integrations must delegate service-token semantics to the native goreecloud_identity authority"
   ],
-  "deployment_boundary": "The first-party GoreeCloud Identity token authority and JWKS generation are implemented in the native goreecloud_identity package. The current Authentik surface is a transitional compatibility/integration layer only. Production acceptance still requires durable Identity-managed signing-key storage, a deployed native or explicitly approved transitional JWKS endpoint, live service-token issuance, rotation evidence, successful end-to-end Mesh verification, and completion of the broader native Identity rebuild.",
+  "deployment_boundary": "The first-party GoreeCloud Identity token authority and JWKS generation are implemented in the native goreecloud_identity package. The runtime file loader now rejects symlinks, non-regular files, oversized key material, and POSIX key files readable or writable by group/other users before PEM parsing. This is source-level key-custody hardening only: production acceptance still requires durable Identity-managed signing-key storage, a deployed native or explicitly approved transitional JWKS endpoint, live service-token issuance, rotation evidence, successful end-to-end Mesh verification, and completion of the broader native Identity rebuild.",
   "production_acceptance": false
 }
