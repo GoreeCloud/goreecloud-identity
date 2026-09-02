@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import UTC, datetime
 
 import jwt
@@ -43,6 +44,8 @@ def write_private_key(path, key: rsa.RSAPrivateKey) -> None:
             encryption_algorithm=serialization.NoEncryption(),
         )
     )
+    if os.name == "posix":
+        path.chmod(0o600)
 
 
 def write_public_key(path, key: rsa.RSAPublicKey) -> None:
@@ -158,6 +161,37 @@ def test_loads_active_private_and_retained_public_keys_from_files(tmp_path) -> N
     assert jwt.get_unverified_header(token)["kid"] == "mesh-key-active-file"
 
 
+@pytest.mark.skipif(os.name != "posix", reason="POSIX permission bits required")
+def test_private_signing_key_file_requires_owner_only_permissions(tmp_path) -> None:
+    active_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    active_path = tmp_path / "active-private.pem"
+    write_private_key(active_path, active_private)
+    active_path.chmod(0o640)
+
+    with pytest.raises(ValueError, match="owner-only permissions"):
+        MeshServiceTokenIssuer.from_key_files(
+            active_kid="mesh-key-permissions",
+            active_private_key_file=active_path,
+        )
+
+
+def test_private_signing_key_file_rejects_symlink(tmp_path) -> None:
+    active_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    real_path = tmp_path / "active-private-real.pem"
+    link_path = tmp_path / "active-private-link.pem"
+    write_private_key(real_path, active_private)
+    try:
+        link_path.symlink_to(real_path)
+    except (OSError, NotImplementedError):
+        pytest.skip("symbolic links are unavailable on this test platform")
+
+    with pytest.raises(ValueError, match="symbolic link"):
+        MeshServiceTokenIssuer.from_key_files(
+            active_kid="mesh-key-symlink",
+            active_private_key_file=link_path,
+        )
+
+
 def test_retained_rotation_configuration_rejects_private_key_files(tmp_path) -> None:
     active_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     retained_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -191,13 +225,15 @@ def test_key_source_configuration_fails_closed(tmp_path) -> None:
 
     invalid_path = tmp_path / "invalid.pem"
     invalid_path.write_text("not a private key")
+    if os.name == "posix":
+        invalid_path.chmod(0o600)
     with pytest.raises(ValueError, match="valid unencrypted PEM"):
         MeshServiceTokenIssuer.from_key_files(
             active_kid="mesh-key-invalid",
             active_private_key_file=invalid_path,
         )
 
-    with pytest.raises(ValueError, match="does not exist"):
+    with pytest.raises(ValueError, match="does not exist or cannot be opened safely"):
         MeshServiceTokenIssuer.from_key_files(
             active_kid="mesh-key-missing",
             active_private_key_file=tmp_path / "missing.pem",
