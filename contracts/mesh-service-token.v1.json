@@ -27,6 +27,14 @@
     "verification_keys": "JWKS",
     "jwks_media_type": "application/json",
     "key_rotation": "new signing keys must be published in JWKS before tokens using them are issued",
+    "protected_header": {
+      "alg": "RS256",
+      "typ": "JWT",
+      "kid_required": true,
+      "critical_headers_allowed": false,
+      "token_selected_or_embedded_key_sources_allowed": false,
+      "rejected_key_source_headers": ["jku", "jwk", "x5u", "x5c"]
+    },
     "runtime_private_key_file_custody": {
       "regular_file_required": true,
       "symbolic_links_allowed": false,
@@ -68,13 +76,14 @@
     "runtime private-key files must be regular, non-symlinked, size-bounded, and owner-only on POSIX before PEM parsing",
     "source-level runtime key-file hardening does not substitute for durable production signing-key custody or managed key lifecycle acceptance",
     "producer systems must not self-sign, mint, or substitute GoreeCloud Mesh service credentials",
+    "tokens must use the RS256/JWT protected-header profile and must not direct consumers to alternate or embedded verification keys",
     "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
     "service_id must match the authenticated workload identity represented by sub",
-    "consumers must validate signature, issuer, audience, expiry, not-before, service identity, required scope, kid profile, RSA key strength, and RSA public exponent",
+    "consumers must validate signature, protected-header profile, issuer, audience, expiry, not-before, service identity, required scope, kid profile, RSA key strength, and RSA public exponent",
     "JWKS consumers must require application/json and must reject redirected or otherwise untrusted key-source transport",
     "unknown or invalid kid, unsupported algorithm, missing required claim, malformed scope, invalid key material, or invalid temporal claim must fail closed",
     "transitional framework integrations must delegate service-token semantics to the native goreecloud_identity authority"
   ],
-  "deployment_boundary": "The first-party GoreeCloud Identity token authority and JWKS generation are implemented in the native goreecloud_identity package. The runtime file loader now rejects symlinks, non-regular files, oversized key material, and POSIX key files readable or writable by group/other users before PEM parsing. This is source-level key-custody hardening only: production acceptance still requires durable Identity-managed signing-key storage, a deployed native or explicitly approved transitional JWKS endpoint, live service-token issuance, rotation evidence, successful end-to-end Mesh verification, and completion of the broader native Identity rebuild.",
+  "deployment_boundary": "The first-party GoreeCloud Identity token authority and JWKS generation are implemented in the native goreecloud_identity package. The runtime file loader now rejects symlinks, non-regular files, oversized key material, and POSIX key files readable or writable by group/other users before PEM parsing. The protected-header contract is aligned with the Mesh verifier and does not permit token-selected key sources. This is source-level key-custody and token-profile hardening only: production acceptance still requires durable Identity-managed signing-key storage, a deployed native or explicitly approved transitional JWKS endpoint, live service-token issuance, rotation evidence, successful end-to-end Mesh verification, and completion of the broader native Identity rebuild.",
   "production_acceptance": false
 }
