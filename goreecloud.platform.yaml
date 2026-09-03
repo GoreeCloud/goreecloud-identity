@@ -1,0 +1,140 @@
+schema_version: '0.2'
+
+component:
+  type: service
+  id: goreecloud-identity
+  product_name: GoreeCloud Identity
+  repository: GoreeCloud/goreecloud-identity
+
+lifecycle: development
+version: '0.3'
+
+supported_platforms:
+  - linux
+  - web
+
+api:
+  versions: []
+  endpoints: []
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - GOREECLOUD.md
+    notes: GoreeCloud Manager integration for Identity inventory, lifecycle, health, configuration visibility, and bounded administration is required but no accepted Manager integration is established by the current repository state.
+  privacy_shield:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - GOREECLOUD.md
+      - contracts/identity.mesh-evidence-profile.json
+    notes: Identity implements privacy-conscious local boundaries and minimized evidence rules, but repository-local privacy behavior is not accepted Privacy Shield integration or data-use authorization.
+  wardveil_security:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - GOREECLOUD.md
+      - SECURITY.md
+    notes: Identity is security-critical and contains source-level security controls, but accepted Wardveil Security integration and runtime protection evidence are not established.
+  everkeep:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - GOREECLOUD.md
+    notes: Backup, restore, break-glass access, signing-key recovery, and continuity are mandatory before production acceptance, but accepted Everkeep integration and restore evidence remain incomplete.
+  glaze_ui:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - GOREECLOUD.md
+      - docs/goreecloud/UI-CUSTOMIZATION.md
+    notes: The native Identity Center and current applicable Glaze UI experience remain incomplete and unaccepted; inherited authentik presentation does not establish GoreeCloud Glaze UI conformance.
+  mesh:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - contracts/identity.mesh-evidence-profile.json
+      - contracts/mesh-service-token.v1.json
+      - goreecloud_identity/mesh_delivery.py
+    notes: GoreeCloud-owned Mesh evidence delivery and service-token source contracts exist and explicitly remain production-unaccepted; deployed verifier, durable signing-key custody, JWKS publication, live issuance, routing, and end-to-end acceptance are still required.
+    capabilities:
+      - identity-evidence-producer
+      - mesh-service-credential-issuer
+    dependencies:
+      - goreecloud-mesh
+    published_events: []
+    consumed_events: []
+  identity:
+    result: not-applicable-justified
+    version: '0.3'
+    evidence:
+      - GOREECLOUD.md
+      - contracts/identity.mesh-evidence-profile.json
+    notes: This repository implements the GoreeCloud Identity authority itself; a separate Identity-to-Identity platform integration is not applicable.
+
+health:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Protect durable identity, account, authentication, authorization, session, application-registration, MFA, passkey/WebAuthn, audit, and required configuration state before production dependence.
+      - Protect signing and encryption material through approved secret and recovery mechanisms without committing reusable secret material to Git or ordinary evidence stores.
+  restore:
+    required: true
+    requirements:
+      - Validate isolated clean-target restoration of required persistent state, signing/encryption material, authentication behavior, and administrative control before production or Stable qualification.
+      - Validate an independently documented break-glass administrative path that does not depend exclusively on the failed Identity service.
+  export:
+    required: true
+    requirements:
+      - Provide documented portable export or migration paths for GoreeCloud-owned identity configuration and durable state where safe and applicable without exporting reusable credentials as ordinary data.
+  portability:
+    required: true
+    requirements:
+      - Preserve standards-based identity interoperability and migration paths so GoreeCloud is not permanently dependent on the inherited authentik-derived product architecture.
+
+external_dependencies:
+  - name: PostgreSQL
+    purpose: Persistent datastore used by the current transitional identity runtime and required for durable identity state until native architecture changes are accepted.
+    required: true
+    version_constraint: null
+
+compatibility:
+  platform_contract: '0.2'
+  glaze_ui_required: '1.1.0'
+  requires:
+    - goreecloud-platform-contract==0.2
+    - glaze-ui==1.1.0
+  provides:
+    - goreecloud-identity-evidence-v1
+    - goreecloud-identity-mesh-service-token-v1
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - GOREECLOUD.md
+    - UPSTREAM.md
+    - contracts/identity.mesh-evidence-profile.json
+    - contracts/mesh-service-token.v1.json
+    - goreecloud_identity/mesh_delivery.py
+  blockers:
+    - GoreeCloud Identity remains in active native migration and the substantial authentik-derived runtime is transitional rather than the accepted permanent GoreeCloud architecture.
+    - Production GoreeCloud-wide SSO and authentication cutover are not approved.
+    - Native Identity Center implementation and acceptance against the current Platform Contract Glaze UI baseline are incomplete.
+    - GoreeCloud Manager integration and acceptance are not established.
+    - Privacy Shield integration and acceptance are not established.
+    - Wardveil Security integration and acceptance are not established.
+    - Everkeep backup, restore, key-recovery, break-glass, and continuity acceptance are incomplete.
+    - Mesh evidence delivery and service-token source implementations lack deployed verifier, durable key custody, JWKS publication, live service issuance, target routing, and end-to-end production acceptance.
+    - At least one controlled application integration, rollback path, private publication, monitoring, backup/restore, and production acceptance remain required.
