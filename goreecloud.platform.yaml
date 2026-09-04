@@ -23,42 +23,56 @@ platform_systems:
     version: null
     evidence:
       - GOREECLOUD.md
-    notes: GoreeCloud Manager integration for Identity inventory, lifecycle, health, configuration visibility, and bounded administration is required but no accepted Manager integration is established by the current repository state.
+      - identity-center-site/index.html
+      - contracts/identity.evidence.schema.json
+    notes: Manager may consume bounded Identity inventory, lifecycle, health, configuration, or platform evidence, but no accepted live Manager-to-Identity administrative integration is established by this source candidate.
   privacy_shield:
     result: applicable-blocked
     version: null
     evidence:
       - GOREECLOUD.md
+      - contracts/identity.evidence.schema.json
       - contracts/identity.mesh-evidence-profile.json
-    notes: Identity implements privacy-conscious local boundaries and minimized evidence rules, but repository-local privacy behavior is not accepted Privacy Shield integration or data-use authorization.
+    notes: Identity implements minimized evidence boundaries, but repository-local privacy behavior and evidence minimization do not establish accepted Privacy Shield integration or data-use authorization.
   wardveil_security:
     result: applicable-blocked
     version: null
     evidence:
       - GOREECLOUD.md
       - SECURITY.md
+      - contracts/identity.evidence.schema.json
     notes: Identity is security-critical and contains source-level security controls, but accepted Wardveil Security integration and runtime protection evidence are not established.
   everkeep:
     result: applicable-blocked
     version: null
     evidence:
       - GOREECLOUD.md
-    notes: Backup, restore, break-glass access, signing-key recovery, and continuity are mandatory before production acceptance, but accepted Everkeep integration and restore evidence remain incomplete.
+      - identity-center-site/index.html
+    notes: Backup, restore, break-glass access, signing-key recovery, continuity, portability, and clean-target recovery acceptance remain mandatory and are not established by this source candidate.
   glaze_ui:
     result: applicable-blocked
-    version: null
+    version: '1.1.0'
     evidence:
-      - GOREECLOUD.md
-      - docs/goreecloud/UI-CUSTOMIZATION.md
-    notes: The native Identity Center and current applicable Glaze UI experience remain incomplete and unaccepted; inherited authentik presentation does not establish GoreeCloud Glaze UI conformance.
+      - identity-center-site/glaze.lock.json
+      - identity-center-site/index.html
+      - scripts/build_identity_public_site.py
+      - scripts/validate_identity_public_site.py
+      - .github/workflows/validate-website.yml
+      - WEBSITE.md
+    notes: Identity Center source targets the published GLAZE UI V1.1 / 1.1.0 baseline, but immutable v1.1.0 contains a transitive import to missing glaze-v1.candidate.css. Identity now fails publication before writing dist when the locked CSS graph is incomplete. A corrected immutable Stable Glaze release, explicit re-pin, fresh exact-revision source/rendered/accessibility evidence, and deployed-byte verification are required before current Glaze conformance can be claimed.
   mesh:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - contracts/identity.mesh-evidence-profile.json
       - contracts/mesh-service-token.v1.json
       - goreecloud_identity/mesh_delivery.py
-    notes: GoreeCloud-owned Mesh evidence delivery and service-token source contracts exist and explicitly remain production-unaccepted; deployed verifier, durable signing-key custody, JWKS publication, live issuance, routing, and end-to-end acceptance are still required.
+      - authentik/goreecloud/mesh_service_token.py
+      - authentik/goreecloud/mesh_service_token_views.py
+      - .github/workflows/goreecloud-mesh-service-token.yml
+      - tests/goreecloud/test_identity_mesh_delivery.py
+      - tests/goreecloud/test_mesh_service_token.py
+    notes: Source-level workload-bound Mesh service-token issuance, public JWKS verification, evidence delivery, and scoped registry permissions exist. Production signing-key custody, deployed JWKS trust, workload binding, rotation/revocation operations, live issuance/routing, and end-to-end Mesh acceptance remain pending.
     capabilities:
       - identity-evidence-producer
       - mesh-service-credential-issuer
@@ -71,7 +85,10 @@ platform_systems:
     version: '0.3'
     evidence:
       - GOREECLOUD.md
+      - identity-center-site/index.html
+      - contracts/identity.evidence.schema.json
       - contracts/identity.mesh-evidence-profile.json
+      - contracts/mesh-service-token.v1.json
     notes: This repository implements the GoreeCloud Identity authority itself; a separate Identity-to-Identity platform integration is not applicable.
 
 health:
@@ -87,7 +104,7 @@ continuity:
   restore:
     required: true
     requirements:
-      - Validate isolated clean-target restoration of required persistent state, signing/encryption material, authentication behavior, and administrative control before production or Stable qualification.
+      - Validate isolated clean-target restoration of required persistent state, signing/encryption material, authentication behavior, service identity, audit integrity, and administrative control before production or Stable qualification.
       - Validate an independently documented break-glass administrative path that does not depend exclusively on the failed Identity service.
   export:
     required: true
@@ -96,7 +113,7 @@ continuity:
   portability:
     required: true
     requirements:
-      - Preserve standards-based identity interoperability and migration paths so GoreeCloud is not permanently dependent on the inherited authentik-derived product architecture.
+      - Preserve standards-based identity interoperability, service registrations, and migration paths so GoreeCloud is not permanently dependent on the inherited authentik-derived product architecture or one deployment environment.
 
 external_dependencies:
   - name: PostgreSQL
@@ -122,19 +139,34 @@ conformance:
   status: nonconformant
   validated_at: null
   evidence:
+    - AGENTS.md
     - README.md
     - GOREECLOUD.md
     - UPSTREAM.md
+    - WEBSITE.md
+    - identity-center-site/index.html
+    - identity-center-site/glaze.lock.json
+    - contracts/identity.evidence.schema.json
     - contracts/identity.mesh-evidence-profile.json
     - contracts/mesh-service-token.v1.json
     - goreecloud_identity/mesh_delivery.py
+    - authentik/goreecloud/mesh_service_token.py
+    - authentik/goreecloud/mesh_service_token_views.py
+    - scripts/build_identity_public_site.py
+    - scripts/validate_identity_public_site.py
+    - tests/goreecloud/test_identity_evidence_contract.py
+    - tests/goreecloud/test_identity_mesh_delivery.py
+    - tests/goreecloud/test_mesh_service_token.py
   blockers:
     - GoreeCloud Identity remains in active native migration and the substantial authentik-derived runtime is transitional rather than the accepted permanent GoreeCloud architecture.
     - Production GoreeCloud-wide SSO and authentication cutover are not approved.
-    - Native Identity Center implementation and acceptance against the current Platform Contract Glaze UI baseline are incomplete.
+    - Production signing-key and private-key custody, rotation, revocation, recovery, and deployed JWKS acceptance remain incomplete.
+    - Live GoreeCloud Mesh workload identity, service-token issuance, evidence delivery, and runtime acceptance remain pending despite source-level contracts and tests.
     - GoreeCloud Manager integration and acceptance are not established.
     - Privacy Shield integration and acceptance are not established.
     - Wardveil Security integration and acceptance are not established.
-    - Everkeep backup, restore, key-recovery, break-glass, and continuity acceptance are incomplete.
-    - Mesh evidence delivery and service-token source implementations lack deployed verifier, durable key custody, JWKS publication, live service issuance, target routing, and end-to-end production acceptance.
-    - At least one controlled application integration, rollback path, private publication, monitoring, backup/restore, and production acceptance remain required.
+    - Everkeep backup, restore, key-recovery, break-glass, continuity, export, and portability acceptance are incomplete.
+    - Published GLAZE UI V1.1 / 1.1.0 has an incomplete immutable CSS import graph; Identity Center publication is fail-closed until a corrected immutable Stable release is explicitly re-pinned and revalidated.
+    - Identity Center rendered Human Visual Excellence, exact production deployment, and deployed-byte acceptance remain outstanding.
+    - Clean-environment Identity restore, break-glass recovery, monitoring, rollback, controlled application integration, and target-environment production acceptance remain outstanding.
+    - Required Stable acceptance-test and published release evidence has not been produced.

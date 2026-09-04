@@ -26,25 +26,53 @@ const (
 )
 
 func (ws *WebServer) configureProxy() {
-	// Reverse proxy to the application server
-	director := func(req *http.Request) {
+	// Reverse proxy to the application server.
+	rewrite := func(pr *httputil.ProxyRequest) {
+		// ReverseProxy's Rewrite path removes Forwarded/X-Forwarded headers
+		// before invoking this hook. Restore the Director-era forwarding state,
+		// then append this client address with SetXForwarded. Host/proto are
+		// restored below so this API migration does not silently expand header
+		// authority beyond the behavior that existed with Director.
+		priorForwarded := append([]string(nil), pr.In.Header.Values("Forwarded")...)
+		priorFor := append([]string(nil), pr.In.Header.Values("X-Forwarded-For")...)
+		priorHost := append([]string(nil), pr.In.Header.Values("X-Forwarded-Host")...)
+		priorProto := append([]string(nil), pr.In.Header.Values("X-Forwarded-Proto")...)
+		if len(priorFor) > 0 {
+			pr.Out.Header["X-Forwarded-For"] = priorFor
+		}
+		pr.SetXForwarded()
+		if len(priorForwarded) > 0 {
+			pr.Out.Header["Forwarded"] = priorForwarded
+		}
+		if len(priorHost) > 0 {
+			pr.Out.Header["X-Forwarded-Host"] = priorHost
+		} else {
+			pr.Out.Header.Del("X-Forwarded-Host")
+		}
+		if len(priorProto) > 0 {
+			pr.Out.Header["X-Forwarded-Proto"] = priorProto
+		} else {
+			pr.Out.Header.Del("X-Forwarded-Proto")
+		}
+
+		req := pr.Out
 		req.URL.Scheme = ws.upstreamURL.Scheme
 		req.URL.Host = ws.upstreamURL.Host
 		if _, ok := req.Header["User-Agent"]; !ok {
 			// explicitly disable User-Agent so it's not set to default value
 			req.Header.Set("User-Agent", "")
 		}
-		if !web.IsRequestFromTrustedProxy(req) {
+		if !web.IsRequestFromTrustedProxy(pr.In) {
 			// If the request isn't coming from a trusted proxy, delete MTLS headers
 			req.Header.Del("SSL-Client-Cert")             // nginx-ingress
 			req.Header.Del("X-Forwarded-TLS-Client-Cert") // traefik
 			req.Header.Del("X-Forwarded-Client-Cert")     // envoy
 		}
-		if req.TLS != nil {
+		if pr.In.TLS != nil {
 			req.Header.Set("X-Forwarded-Proto", "https")
-			if len(req.TLS.PeerCertificates) > 0 {
-				pems := make([]string, len(req.TLS.PeerCertificates))
-				for i, crt := range req.TLS.PeerCertificates {
+			if len(pr.In.TLS.PeerCertificates) > 0 {
+				pems := make([]string, len(pr.In.TLS.PeerCertificates))
+				for i, crt := range pr.In.TLS.PeerCertificates {
 					pem := pem.EncodeToMemory(&pem.Block{
 						Type:  "CERTIFICATE",
 						Bytes: crt.Raw,
@@ -57,7 +85,7 @@ func (ws *WebServer) configureProxy() {
 		ws.log.WithField("url", req.URL.String()).WithField("headers", req.Header).Trace("tracing request to backend")
 	}
 	rp := &httputil.ReverseProxy{
-		Director:  director,
+		Rewrite:   rewrite,
 		Transport: ws.upstreamHttpClient().Transport,
 	}
 	rp.ErrorHandler = ws.proxyErrorHandler

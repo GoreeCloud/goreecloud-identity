@@ -6,6 +6,8 @@ import pytest
 
 from goreecloud_identity.mesh_delivery import MeshDeliveryClient, MeshDeliveryError
 
+EXPECTED_DELIVERY_TIMEOUT_SECONDS = 3.0
+
 
 def envelope() -> dict[str, object]:
     return {
@@ -90,7 +92,10 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
 
     submitted = envelope()
     token = "short-lived-identity-token"
-    client = MeshDeliveryClient("https://mesh.goreecloud.com", timeout_seconds=3)
+    client = MeshDeliveryClient(
+        "https://mesh.goreecloud.com",
+        timeout_seconds=EXPECTED_DELIVERY_TIMEOUT_SECONDS,
+    )
     receipt = client.deliver(submitted, bearer_token=token)
 
     assert receipt.evidence_id == submitted["id"]
@@ -98,7 +103,7 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
     assert receipt.replayed is False
     assert token not in repr(receipt)
     assert token not in json.dumps(submitted)
-    assert fake.last_timeout == 3.0
+    assert fake.last_timeout == EXPECTED_DELIVERY_TIMEOUT_SECONDS
     assert fake.last_request.full_url == "https://mesh.goreecloud.com/v1/evidence/envelopes"
     assert fake.last_request.get_header("Authorization") == f"Bearer {token}"
 

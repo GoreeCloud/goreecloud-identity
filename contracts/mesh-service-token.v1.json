@@ -44,16 +44,23 @@
     "mesh.contracts.write",
     "mesh.evidence.read",
     "mesh.evidence.write",
-    "mesh.everkeep.recovery.write"
+    "mesh.everkeep.recovery.write",
+    "mesh.platform-registry.read",
+    "mesh.platform-registry.write"
   ],
+  "scope_boundaries": {
+    "mesh.platform-registry.read": "read normalized authority-preserving Platform Registry records; does not grant producer mutation or domain authority",
+    "mesh.platform-registry.write": "submit only the authenticated component's own Platform Registry record; GoreeCloud Mesh enforces service_id == component.id and does not transfer producer authority"
+  },
   "security_requirements": [
     "private signing keys never leave GoreeCloud Identity",
     "producer systems must not self-sign, mint, or substitute GoreeCloud Mesh service credentials",
     "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
     "service_id must match the authenticated workload identity represented by sub",
     "consumers must validate signature, issuer, audience, expiry, not-before, service identity, and required scope",
+    "platform registry write credentials must remain workload-bound and must not authorize one service to publish another component's record",
     "unknown kid, unsupported algorithm, missing required claim, malformed scope, or invalid temporal claim must fail closed"
   ],
-  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live service-token issuance, rotation evidence, and successful end-to-end Mesh verification.",
+  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented, including the scoped Platform Registry read/write permissions required by the current Mesh Platform Registry API. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live workload-bound service-token issuance, rotation/revocation evidence, and successful end-to-end Mesh verification.",
   "production_acceptance": false
 }
