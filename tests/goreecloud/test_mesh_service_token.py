@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 
 import jwt
 import pytest
@@ -17,6 +17,8 @@ from authentik.goreecloud.mesh_service_token import (
     MeshVerificationKey,
     VerifiedWorkloadPrincipal,
 )
+
+TOKEN_LIFETIME_SECONDS = 300
 
 
 def signing_key(kid: str) -> MeshSigningKey:
@@ -61,14 +63,14 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     token = issuer.issue_for_principal(
         principal=principal("wardveil-security", "mesh.evidence.write"),
         requested_scopes=["mesh.evidence.write"],
-        lifetime_seconds=300,
+        lifetime_seconds=TOKEN_LIFETIME_SECONDS,
         now=now,
         jti="wardveil-test-001",
     )
 
     header = jwt.get_unverified_header(token)
-    assert header["alg"] == "RS256"
-    assert header["kid"] == key.kid
+    assert header["alg"] == "RS256"  # nosec B101
+    assert header["kid"] == key.kid  # nosec B101
 
     claims = jwt.decode(
         token,
@@ -78,16 +80,16 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
         issuer=ISSUER,
         options={"verify_exp": False, "verify_nbf": False},
     )
-    assert claims["sub"] == "service:wardveil-security"
-    assert claims["service_id"] == "wardveil-security"
-    assert claims["scope"] == "mesh.evidence.write"
-    assert claims["exp"] - claims["iat"] == 300
-    assert claims["jti"] == "wardveil-test-001"
+    assert claims["sub"] == "service:wardveil-security"  # nosec B101
+    assert claims["service_id"] == "wardveil-security"  # nosec B101
+    assert claims["scope"] == "mesh.evidence.write"  # nosec B101
+    assert claims["exp"] - claims["iat"] == TOKEN_LIFETIME_SECONDS  # nosec B101
+    assert claims["jti"] == "wardveil-test-001"  # nosec B101
 
 
 def test_public_arbitrary_service_id_issuance_api_is_not_exposed() -> None:
     issuer = MeshServiceTokenIssuer(signing_key("mesh-key-no-arbitrary-id"))
-    assert not hasattr(issuer, "issue")
+    assert not hasattr(issuer, "issue")  # nosec B101
     with pytest.raises(TypeError, match="VerifiedWorkloadPrincipal"):
         issuer.issue_for_principal(  # type: ignore[arg-type]
             principal="wardveil-security",
@@ -112,17 +114,17 @@ def test_jwks_contains_public_active_and_retained_keys_without_private_material(
     retained = retained_private.verification_key()
     issuer = MeshServiceTokenIssuer(active, [retained])
 
-    assert isinstance(retained, MeshVerificationKey)
-    assert not hasattr(retained, "private_key")
+    assert isinstance(retained, MeshVerificationKey)  # nosec B101
+    assert not hasattr(retained, "private_key")  # nosec B101
     jwks = issuer.jwks()
-    assert [item["kid"] for item in jwks["keys"]] == [active.kid, retained.kid]
+    assert [item["kid"] for item in jwks["keys"]] == [active.kid, retained.kid]  # nosec B101
     for item in jwks["keys"]:
-        assert item["kty"] == "RSA"
-        assert item["alg"] == "RS256"
-        assert item["use"] == "sig"
-        assert "n" in item and "e" in item
+        assert item["kty"] == "RSA"  # nosec B101
+        assert item["alg"] == "RS256"  # nosec B101
+        assert item["use"] == "sig"  # nosec B101
+        assert "n" in item and "e" in item  # nosec B101
         for private_parameter in ("d", "p", "q", "dp", "dq", "qi", "oth"):
-            assert private_parameter not in item
+            assert private_parameter not in item  # nosec B101
 
 
 def test_loads_active_private_and_retained_public_keys_from_files(tmp_path) -> None:
@@ -143,8 +145,8 @@ def test_loads_active_private_and_retained_public_keys_from_files(tmp_path) -> N
         }
     )
 
-    assert issuer.active_kid == "mesh-key-active-file"
-    assert [item["kid"] for item in issuer.jwks()["keys"]] == [
+    assert issuer.active_kid == "mesh-key-active-file"  # nosec B101
+    assert [item["kid"] for item in issuer.jwks()["keys"]] == [  # nosec B101
         "mesh-key-active-file",
         "mesh-key-retained-file",
     ]
@@ -154,7 +156,7 @@ def test_loads_active_private_and_retained_public_keys_from_files(tmp_path) -> N
         requested_scopes=["mesh.evidence.write"],
         lifetime_seconds=60,
     )
-    assert jwt.get_unverified_header(token)["kid"] == "mesh-key-active-file"
+    assert jwt.get_unverified_header(token)["kid"] == "mesh-key-active-file"  # nosec B101
 
 
 def test_retained_rotation_configuration_rejects_private_key_files(tmp_path) -> None:
@@ -219,7 +221,10 @@ def test_rejects_unknown_principal_scope_excessive_lifetime_and_invalid_service_
 
 
 def test_rejects_weak_keys_duplicate_kids_and_naive_time() -> None:
-    weak = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    weak = rsa.generate_private_key(  # nosec B505
+        public_exponent=65537,
+        key_size=1024,
+    )
     with pytest.raises(ValueError, match="at least 2048 bits"):
         MeshSigningKey(kid="mesh-key-weak", private_key=weak)
 

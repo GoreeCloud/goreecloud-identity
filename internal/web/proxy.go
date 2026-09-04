@@ -27,24 +27,44 @@ const (
 
 func (ws *WebServer) configureProxy() {
 	// Reverse proxy to the application server
-	director := func(req *http.Request) {
+	rewrite := func(pr *httputil.ProxyRequest) {
+		req := pr.Out
+		inbound := pr.In
 		req.URL.Scheme = ws.upstreamURL.Scheme
 		req.URL.Host = ws.upstreamURL.Host
+
+		trustedProxy := web.IsRequestFromTrustedProxy(inbound)
+		if trustedProxy {
+			// Preserve an authenticated proxy chain before SetXForwarded appends the
+			// directly connected proxy address. Untrusted client-supplied forwarding
+			// headers are intentionally discarded by the Rewrite API.
+			req.Header["X-Forwarded-For"] = append([]string(nil), inbound.Header.Values("X-Forwarded-For")...)
+		}
+		pr.SetXForwarded()
+		if trustedProxy {
+			if forwardedHost := inbound.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+				req.Header.Set("X-Forwarded-Host", forwardedHost)
+			}
+			if forwardedProto := inbound.Header.Get("X-Forwarded-Proto"); forwardedProto != "" {
+				req.Header.Set("X-Forwarded-Proto", forwardedProto)
+			}
+		}
+
 		if _, ok := req.Header["User-Agent"]; !ok {
 			// explicitly disable User-Agent so it's not set to default value
 			req.Header.Set("User-Agent", "")
 		}
-		if !web.IsRequestFromTrustedProxy(req) {
+		if !trustedProxy {
 			// If the request isn't coming from a trusted proxy, delete MTLS headers
 			req.Header.Del("SSL-Client-Cert")             // nginx-ingress
 			req.Header.Del("X-Forwarded-TLS-Client-Cert") // traefik
 			req.Header.Del("X-Forwarded-Client-Cert")     // envoy
 		}
-		if req.TLS != nil {
+		if inbound.TLS != nil {
 			req.Header.Set("X-Forwarded-Proto", "https")
-			if len(req.TLS.PeerCertificates) > 0 {
-				pems := make([]string, len(req.TLS.PeerCertificates))
-				for i, crt := range req.TLS.PeerCertificates {
+			if len(inbound.TLS.PeerCertificates) > 0 {
+				pems := make([]string, len(inbound.TLS.PeerCertificates))
+				for i, crt := range inbound.TLS.PeerCertificates {
 					pem := pem.EncodeToMemory(&pem.Block{
 						Type:  "CERTIFICATE",
 						Bytes: crt.Raw,
@@ -57,7 +77,7 @@ func (ws *WebServer) configureProxy() {
 		ws.log.WithField("url", req.URL.String()).WithField("headers", req.Header).Trace("tracing request to backend")
 	}
 	rp := &httputil.ReverseProxy{
-		Director:  director,
+		Rewrite:   rewrite,
 		Transport: ws.upstreamHttpClient().Transport,
 	}
 	rp.ErrorHandler = ws.proxyErrorHandler

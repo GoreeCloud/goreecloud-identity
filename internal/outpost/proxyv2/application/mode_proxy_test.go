@@ -3,6 +3,7 @@ package application
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 	"net/url"
 	"testing"
 
@@ -12,6 +13,12 @@ import (
 	"goauthentik.io/internal/outpost/proxyv2/types"
 )
 
+func rewriteProxyRequest(a *Application, upstream *url.URL, inbound *http.Request) *http.Request {
+	outbound := inbound.Clone(inbound.Context())
+	a.proxyRewriteRequest(upstream)(&httputil.ProxyRequest{In: inbound, Out: outbound})
+	return outbound
+}
+
 func TestProxy_ModifyRequest(t *testing.T) {
 	a := newTestApplication()
 	req, _ := http.NewRequest("GET", "http://frontend/foo", nil)
@@ -19,12 +26,13 @@ func TestProxy_ModifyRequest(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	a.proxyModifyRequest(u)(req)
+	outbound := rewriteProxyRequest(a, u, req)
 
-	assert.Equal(t, "frontend", req.Header.Get("X-Forwarded-Host"))
-	assert.Equal(t, "/foo", req.URL.Path)
-	assert.Equal(t, "backend:8012", req.URL.Host)
-	assert.Equal(t, "frontend", req.Host)
+	assert.Equal(t, "frontend", outbound.Header.Get("X-Forwarded-Host"))
+	assert.Equal(t, "http", outbound.Header.Get("X-Forwarded-Proto"))
+	assert.Equal(t, "/foo", outbound.URL.Path)
+	assert.Equal(t, "backend:8012", outbound.URL.Host)
+	assert.Equal(t, "frontend", outbound.Host)
 }
 
 func TestProxy_Redirect(t *testing.T) {
@@ -85,11 +93,11 @@ func TestProxy_ModifyRequest_Claims(t *testing.T) {
 		panic(err)
 	}
 
-	a.proxyModifyRequest(u)(req)
+	outbound := rewriteProxyRequest(a, u, req)
 
-	assert.Equal(t, "/foo", req.URL.Path)
-	assert.Equal(t, "other-backend:8123", req.URL.Host)
-	assert.Equal(t, "frontend", req.Host)
+	assert.Equal(t, "/foo", outbound.URL.Path)
+	assert.Equal(t, "other-backend:8123", outbound.URL.Host)
+	assert.Equal(t, "frontend", outbound.Host)
 }
 
 func TestProxy_ModifyRequest_Claims_Invalid(t *testing.T) {
@@ -115,9 +123,9 @@ func TestProxy_ModifyRequest_Claims_Invalid(t *testing.T) {
 		panic(err)
 	}
 
-	a.proxyModifyRequest(u)(req)
+	outbound := rewriteProxyRequest(a, u, req)
 
-	assert.Equal(t, "/foo", req.URL.Path)
-	assert.Equal(t, "backend:8012", req.URL.Host)
-	assert.Equal(t, "frontend", req.Host)
+	assert.Equal(t, "/foo", outbound.URL.Path)
+	assert.Equal(t, "backend:8012", outbound.URL.Host)
+	assert.Equal(t, "frontend", outbound.Host)
 }

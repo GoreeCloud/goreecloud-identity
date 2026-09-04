@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "goreecloud-identity.consumer-directory.v1",
+  "status": "development",
+  "owner": "GoreeCloud Identity",
+  "purpose": "Privacy-preserving exact-handle resolution for authorized GoreeCloud application services.",
+  "request": {
+    "method": "POST",
+    "path": "/v1/consumer-directory/resolve",
+    "content_type": "application/json",
+    "max_body_bytes": 4096,
+    "body": {
+      "required_fields": ["handle"],
+      "allowed_fields": ["handle"],
+      "handle": {
+        "type": "string",
+        "canonical_form": "lowercase ASCII handle without leading @",
+        "leading_at_accepted": true,
+        "max_canonical_length": 32
+      }
+    },
+    "authentication": {
+      "required": true,
+      "requester_service_source": "verified_service_principal",
+      "requester_service_must_not_be_client_supplied": true,
+      "transport_profile": "separately approved GoreeCloud service-authentication profile"
+    }
+  },
+  "responses": {
+    "resolved": {
+      "status": 200,
+      "cache_control": "no-store",
+      "body_fields": ["subject", "handle", "display_name"],
+      "subject": "opaque GoreeCloud Identity subject",
+      "display_name_optional": true
+    },
+    "not_resolved": {
+      "status": 404,
+      "cache_control": "no-store",
+      "body": {
+        "error": {
+          "code": "not_resolved",
+          "message": "The requested identity could not be resolved."
+        }
+      },
+      "indistinguishable_conditions": [
+        "handle does not exist",
+        "account is not discoverable",
+        "verified requesting service is not authorized for disclosure"
+      ]
+    },
+    "invalid_request": {
+      "status": 400,
+      "cache_control": "no-store"
+    },
+    "unauthenticated_service": {
+      "status": 401,
+      "cache_control": "no-store"
+    }
+  },
+  "privacy_requirements": {
+    "exact_match_only": true,
+    "prefix_search_prohibited": true,
+    "fuzzy_search_prohibited": true,
+    "directory_browse_prohibited": true,
+    "administrative_listing_prohibited": true,
+    "email_or_phone_disclosure_prohibited": true,
+    "authorization_policy_disclosure_prohibited": true,
+    "ordinary_response_logging_of_handles_should_be_minimized": true,
+    "uniform_negative_response_required": true
+  },
+  "authority_boundaries": {
+    "identity": "owns handle canonicalization, discoverability policy, service disclosure policy, and subject projection",
+    "consumer_application": "owns application-specific invitation, membership, and resource authorization after successful resolution",
+    "client": "may supply only the exact handle to the consumer application; it does not assert requester service identity or Identity disclosure authority"
+  },
+  "non_goals": [
+    "general account search",
+    "people discovery feed",
+    "administrative identity management",
+    "application-specific authorization",
+    "production service-authentication profile selection"
+  ]
+}

@@ -29,7 +29,7 @@ func (a *Application) configureProxy() error {
 	}
 	rsp := sentry.StartSpan(context.TODO(), "authentik.outposts.proxy.application_transport")
 	rp := &httputil.ReverseProxy{
-		Director:       a.proxyModifyRequest(u),
+		Rewrite:        a.proxyRewriteRequest(u),
 		Transport:      web.NewTracingTransport(rsp.Context(), a.getUpstreamTransport()),
 		ErrorHandler:   a.newProxyErrorHandler(),
 		ModifyResponse: a.proxyModifyResponse,
@@ -68,12 +68,18 @@ func (a *Application) configureProxy() error {
 	return nil
 }
 
-func (a *Application) proxyModifyRequest(ou *url.URL) func(req *http.Request) {
-	return func(r *http.Request) {
-		r.Header.Set("X-Forwarded-Host", r.Host)
+func (a *Application) proxyRewriteRequest(ou *url.URL) func(req *httputil.ProxyRequest) {
+	return func(pr *httputil.ProxyRequest) {
+		r := pr.Out
 		r.URL.Scheme = ou.Scheme
 		r.URL.Host = ou.Host
-		claims := a.getClaimsFromSession(nil, r)
+
+		// Rewrite runs after hop-by-hop and client-supplied Forwarded headers are
+		// removed. Recreate forwarding metadata from the actual inbound request so
+		// a client cannot erase or spoof proxy-added forwarding headers.
+		pr.SetXForwarded()
+
+		claims := a.getClaimsFromSession(nil, pr.In)
 		if claims != nil && claims.Proxy != nil {
 			if claims.Proxy.BackendOverride != "" {
 				u, err := url.Parse(claims.Proxy.BackendOverride)
