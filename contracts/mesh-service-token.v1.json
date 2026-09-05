@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "token_profile": "goreecloud-identity.mesh-service-token.v1",
   "issuer": "goreecloud-identity",
   "audience": "goreecloud-mesh",
@@ -42,18 +42,28 @@
     "mesh.policy.evaluate",
     "mesh.attestations.write",
     "mesh.contracts.write",
+    "mesh.events.read",
     "mesh.evidence.read",
     "mesh.evidence.write",
-    "mesh.everkeep.recovery.write"
+    "mesh.everkeep.recovery.write",
+    "mesh.platform-registry.read",
+    "mesh.platform-registry.write"
   ],
+  "scope_boundaries": {
+    "mesh.events.read": "consume only explicitly filtered live Mesh lifecycle events; does not grant event publication, producer authority, replay, persistence, or durable delivery",
+    "mesh.platform-registry.read": "read normalized authority-preserving Platform Registry records; does not grant producer mutation or domain authority",
+    "mesh.platform-registry.write": "submit only the authenticated component's own Platform Registry record; GoreeCloud Mesh enforces service_id == component.id and does not transfer producer authority"
+  },
   "security_requirements": [
     "private signing keys never leave GoreeCloud Identity",
     "producer systems must not self-sign, mint, or substitute GoreeCloud Mesh service credentials",
     "tokens must not contain user content, secrets, backup payloads, prompts, or private application data",
     "service_id must match the authenticated workload identity represented by sub",
     "consumers must validate signature, issuer, audience, expiry, not-before, service identity, and required scope",
+    "event read credentials must remain workload-bound and must not grant event publication, replay, or producer-domain authority",
+    "platform registry write credentials must remain workload-bound and must not authorize one service to publish another component's record",
     "unknown kid, unsupported algorithm, missing required claim, malformed scope, or invalid temporal claim must fail closed"
   ],
-  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live service-token issuance, rotation evidence, and successful end-to-end Mesh verification.",
+  "deployment_boundary": "Runtime token issuance and JWKS generation are implemented, including the scoped Platform Registry read/write permissions and the read-only live event-consumer permission required by current Mesh source candidates. Production acceptance requires durable Identity-managed signing-key storage, a deployed JWKS endpoint, live workload-bound service-token issuance, rotation/revocation evidence, and successful end-to-end Mesh verification.",
   "production_acceptance": false
 }

@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 
 import jwt
 import pytest
@@ -17,6 +17,8 @@ from authentik.goreecloud.mesh_service_token import (
     MeshVerificationKey,
     VerifiedWorkloadPrincipal,
 )
+
+EXPECTED_TOKEN_LIFETIME_SECONDS = 300
 
 
 def signing_key(kid: str) -> MeshSigningKey:
@@ -61,7 +63,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     token = issuer.issue_for_principal(
         principal=principal("wardveil-security", "mesh.evidence.write"),
         requested_scopes=["mesh.evidence.write"],
-        lifetime_seconds=300,
+        lifetime_seconds=EXPECTED_TOKEN_LIFETIME_SECONDS,
         now=now,
         jti="wardveil-test-001",
     )
@@ -81,7 +83,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     assert claims["sub"] == "service:wardveil-security"
     assert claims["service_id"] == "wardveil-security"
     assert claims["scope"] == "mesh.evidence.write"
-    assert claims["exp"] - claims["iat"] == 300
+    assert claims["exp"] - claims["iat"] == EXPECTED_TOKEN_LIFETIME_SECONDS
     assert claims["jti"] == "wardveil-test-001"
 
 
@@ -104,6 +106,94 @@ def test_principal_scope_ceiling_prevents_escalation() -> None:
             principal=verified,
             requested_scopes=["mesh.evidence.write", "mesh.evidence.read"],
         )
+
+
+def test_event_read_scope_is_workload_bound_and_non_escalating() -> None:
+    key = signing_key("mesh-key-event-read")
+    issuer = MeshServiceTokenIssuer(key)
+    now = datetime(2026, 9, 5, 10, 15, tzinfo=UTC)
+
+    consumer = principal("mesh-event-consumer", "mesh.events.read")
+    token = issuer.issue_for_principal(
+        principal=consumer,
+        requested_scopes=["mesh.events.read"],
+        lifetime_seconds=60,
+        now=now,
+        jti="mesh-event-read-001",
+    )
+    claims = jwt.decode(
+        token,
+        key.private_key.public_key(),
+        algorithms=["RS256"],
+        audience=AUDIENCE,
+        issuer=ISSUER,
+        options={"verify_exp": False, "verify_nbf": False},
+    )
+    assert claims["service_id"] == "mesh-event-consumer"
+    assert claims["scope"] == "mesh.events.read"
+
+    with pytest.raises(PermissionError, match="not authorized"):
+        issuer.issue_for_principal(
+            principal=consumer,
+            requested_scopes=["mesh.events.read", "mesh.evidence.read"],
+            lifetime_seconds=60,
+            now=now,
+        )
+
+
+def test_platform_registry_scopes_are_workload_bound_and_non_escalating() -> None:
+    key = signing_key("mesh-key-platform-registry")
+    issuer = MeshServiceTokenIssuer(key)
+    now = datetime(2026, 9, 3, 21, 5, tzinfo=UTC)
+
+    manager = principal("goreecloud-manager", "mesh.platform-registry.read")
+    read_token = issuer.issue_for_principal(
+        principal=manager,
+        requested_scopes=["mesh.platform-registry.read"],
+        lifetime_seconds=60,
+        now=now,
+        jti="manager-platform-read-001",
+    )
+    read_claims = jwt.decode(
+        read_token,
+        key.private_key.public_key(),
+        algorithms=["RS256"],
+        audience=AUDIENCE,
+        issuer=ISSUER,
+        options={"verify_exp": False, "verify_nbf": False},
+    )
+    assert read_claims["service_id"] == "goreecloud-manager"
+    assert read_claims["scope"] == "mesh.platform-registry.read"
+
+    with pytest.raises(PermissionError, match="not authorized"):
+        issuer.issue_for_principal(
+            principal=manager,
+            requested_scopes=["mesh.platform-registry.write"],
+            lifetime_seconds=60,
+            now=now,
+        )
+
+    producer = principal(
+        "goreecloud-privacy-shield",
+        "mesh.platform-registry.write",
+    )
+    write_token = issuer.issue_for_principal(
+        principal=producer,
+        requested_scopes=["mesh.platform-registry.write"],
+        lifetime_seconds=60,
+        now=now,
+        jti="privacy-platform-write-001",
+    )
+    write_claims = jwt.decode(
+        write_token,
+        key.private_key.public_key(),
+        algorithms=["RS256"],
+        audience=AUDIENCE,
+        issuer=ISSUER,
+        options={"verify_exp": False, "verify_nbf": False},
+    )
+    assert write_claims["service_id"] == "goreecloud-privacy-shield"
+    assert write_claims["scope"] == "mesh.platform-registry.write"
 
 
 def test_jwks_contains_public_active_and_retained_keys_without_private_material() -> None:
@@ -219,12 +309,16 @@ def test_rejects_unknown_principal_scope_excessive_lifetime_and_invalid_service_
 
 
 def test_rejects_weak_keys_duplicate_kids_and_naive_time() -> None:
-    weak = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    # Intentional weak-key rejection test; verifies the enforced 2048-bit minimum.
+    weak = rsa.generate_private_key(  # nosec B505
+        public_exponent=65537,
+        key_size=1024,
+    )
     with pytest.raises(ValueError, match="at least 2048 bits"):
         MeshSigningKey(kid="mesh-key-weak", private_key=weak)
 
     first = signing_key("mesh-key-duplicate")
-    second = signing_key("mesh-key-duplicate")
+    second = signing_key("mesh-key-duplicate").verification_key()
     with pytest.raises(ValueError, match="must be unique"):
         MeshServiceTokenIssuer(first, [second])
 
