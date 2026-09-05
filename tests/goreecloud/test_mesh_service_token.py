@@ -108,6 +108,39 @@ def test_principal_scope_ceiling_prevents_escalation() -> None:
         )
 
 
+def test_event_read_scope_is_workload_bound_and_non_escalating() -> None:
+    key = signing_key("mesh-key-event-read")
+    issuer = MeshServiceTokenIssuer(key)
+    now = datetime(2026, 9, 5, 10, 15, tzinfo=UTC)
+
+    consumer = principal("mesh-event-consumer", "mesh.events.read")
+    token = issuer.issue_for_principal(
+        principal=consumer,
+        requested_scopes=["mesh.events.read"],
+        lifetime_seconds=60,
+        now=now,
+        jti="mesh-event-read-001",
+    )
+    claims = jwt.decode(
+        token,
+        key.private_key.public_key(),
+        algorithms=["RS256"],
+        audience=AUDIENCE,
+        issuer=ISSUER,
+        options={"verify_exp": False, "verify_nbf": False},
+    )
+    assert claims["service_id"] == "mesh-event-consumer"
+    assert claims["scope"] == "mesh.events.read"
+
+    with pytest.raises(PermissionError, match="not authorized"):
+        issuer.issue_for_principal(
+            principal=consumer,
+            requested_scopes=["mesh.events.read", "mesh.evidence.read"],
+            lifetime_seconds=60,
+            now=now,
+        )
+
+
 def test_platform_registry_scopes_are_workload_bound_and_non_escalating() -> None:
     key = signing_key("mesh-key-platform-registry")
     issuer = MeshServiceTokenIssuer(key)

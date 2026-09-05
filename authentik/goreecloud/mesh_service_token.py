@@ -40,6 +40,7 @@ _ALLOWED_SCOPES = frozenset(
         "mesh.policy.evaluate",
         "mesh.attestations.write",
         "mesh.contracts.write",
+        "mesh.events.read",
         "mesh.evidence.read",
         "mesh.evidence.write",
         "mesh.everkeep.recovery.write",
