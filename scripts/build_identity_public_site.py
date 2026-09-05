@@ -128,7 +128,9 @@ def validate_glaze_import_closure(assets: dict[str, bytes]) -> None:
 
         for target in targets:
             if not target.startswith("./"):
-                raise SystemExit(f"Glaze import must be same-directory relative in {name}: {target}")
+                raise SystemExit(
+                    f"Glaze import must be same-directory relative in {name}: {target}"
+                )
             if any(marker in target for marker in ("?", "#", "..")):
                 raise SystemExit(f"unsafe Glaze import target in {name}: {target}")
             imported_name = require_glaze_name(target[2:])
