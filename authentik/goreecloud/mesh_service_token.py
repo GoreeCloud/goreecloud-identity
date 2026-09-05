@@ -149,14 +149,24 @@ class MeshSigningKey:
             raise ValueError("Mesh service-token RSA keys must be at least 2048 bits")
 
     @classmethod
-    def from_private_key_file(cls, *, kid: str, path: str | os.PathLike[str]) -> MeshSigningKey:
+    def from_private_key_file(
+        cls,
+        *,
+        kid: str,
+        path: str | os.PathLike[str],
+    ) -> MeshSigningKey:
         """Load an Identity-owned PEM key from a runtime secret file."""
 
         key_path = Path(path)
         if not key_path.is_file():
-            raise ValueError(f"Mesh signing key file does not exist or is not a file: {key_path}")
+            raise ValueError(
+                "Mesh signing key file does not exist or is not a file: "
+                f"{key_path}"
+            )
         try:
-            loaded = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
+            loaded = serialization.load_pem_private_key(
+                key_path.read_bytes(), password=None
+            )
         except (OSError, TypeError, ValueError) as exc:
             raise ValueError(
                 "Mesh signing key file is not a valid unencrypted PEM private key: "
@@ -205,7 +215,10 @@ class MeshServiceTokenIssuer:
         active_private_key_file: str | os.PathLike[str],
         retained_public_key_files: Mapping[str, str | os.PathLike[str]] | None = None,
     ) -> MeshServiceTokenIssuer:
-        active = MeshSigningKey.from_private_key_file(kid=active_kid, path=active_private_key_file)
+        active = MeshSigningKey.from_private_key_file(
+            kid=active_kid,
+            path=active_private_key_file,
+        )
         retained = [
             MeshVerificationKey.from_public_key_file(kid=kid, path=path)
             for kid, path in (retained_public_key_files or {}).items()
@@ -213,7 +226,9 @@ class MeshServiceTokenIssuer:
         return cls(active, retained)
 
     @classmethod
-    def from_environment(cls, environ: Mapping[str, str] | None = None) -> MeshServiceTokenIssuer:
+    def from_environment(
+        cls, environ: Mapping[str, str] | None = None
+    ) -> MeshServiceTokenIssuer:
         """Build the issuer from secret/public-key file references.
 
         The active private key is read only from an Identity-owned secret file.
@@ -304,7 +319,8 @@ class MeshServiceTokenIssuer:
             raise ValueError("at least one Mesh scope is required")
         if lifetime_seconds < 1 or lifetime_seconds > MAX_LIFETIME_SECONDS:
             raise ValueError(
-                f"Mesh service-token lifetime must be between 1 and {MAX_LIFETIME_SECONDS} seconds"
+                f"Mesh service-token lifetime must be between 1 and "
+                f"{MAX_LIFETIME_SECONDS} seconds"
             )
         issued_at = now or datetime.now(UTC)
         if issued_at.tzinfo is None:
@@ -331,11 +347,18 @@ class MeshServiceTokenIssuer:
             "jti": token_id,
         }
         headers = {"kid": self._active_key.kid, "typ": "JWT"}
-        return jwt.encode(claims, self._active_key.private_key, algorithm="RS256", headers=headers)
+        return jwt.encode(
+            claims,
+            self._active_key.private_key,
+            algorithm="RS256",
+            headers=headers,
+        )
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip()))
+    normalized = tuple(
+        dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip())
+    )
     if not normalized:
         return ()
     unknown = sorted(set(normalized) - _ALLOWED_SCOPES)
