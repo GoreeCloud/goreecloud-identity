@@ -4,6 +4,8 @@
 
 The project intentionally retains authentik's mature identity-provider foundation while GoreeCloud establishes its own product boundaries, Glaze UI experience, deployment model, recovery controls, and application-integration contracts.
 
+The public GoreeCloud Identity Center at `identity.goreecloud.com` now has canonical static-site source authority in `GoreeCloud/goreecloud-static-websites` under `sites/identity/`. The `identity-center-site/` subtree here is retained only as transitional deployment/history material until Cloudflare Pages is cut over to the central repository and exact production verification succeeds. Authentik upstream documentation under `website/` is not the GoreeCloud Identity Center and is not part of the static-site consolidation.
+
 - GoreeCloud project boundary: [`GOREECLOUD.md`](GOREECLOUD.md)
 - Upstream maintenance contract: [`UPSTREAM.md`](UPSTREAM.md)
 - GoreeCloud architecture baseline: [`docs/goreecloud/ARCHITECTURE.md`](docs/goreecloud/ARCHITECTURE.md)
@@ -25,7 +27,7 @@ The project intentionally retains authentik's mature identity-provider foundatio
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/goauthentik/authentik/ci-web.yml?branch=main&label=web%20build&style=for-the-badge)](https://github.com/goauthentik/authentik/actions/workflows/ci-web.yml)
 [![Code Coverage](https://img.shields.io/codecov/c/gh/goauthentik/authentik?style=for-the-badge)](https://codecov.io/gh/goauthentik/authentik)
 ![Latest version](https://img.shields.io/docker/v/authentik/server?sort=semver&style=for-the-badge)
-[![](https://img.shields.io/badge/Help%20translate-transifex-blue?style=for-the-badge)](https://explore.transifex.com/authentik/authentik/)
+[![](https://img.shields.io/badge/Help%20translate-transifex-blue?style=for-the-badge)](https://explore.transifex.com/authentik/authentik)
 
 ### What is authentik?
 
