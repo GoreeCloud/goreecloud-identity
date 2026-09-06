@@ -57,12 +57,7 @@ def require_file(path: Path) -> Path:
 
 
 def require_glaze_name(name: str) -> str:
-    if (
-        not name.endswith(".css")
-        or "/" in name
-        or "\\" in name
-        or name in {".", ".."}
-    ):
+    if not name.endswith(".css") or "/" in name or "\\" in name or name in {".", ".."}:
         raise SystemExit(f"unsafe Glaze asset name: {name}")
     return name
 
@@ -86,9 +81,7 @@ def fetch_glaze(name: str) -> bytes:
         )
         response = connection.getresponse()
         if response.status != HTTP_OK:
-            raise SystemExit(
-                f"failed to fetch Glaze UI asset {safe_name}: HTTP {response.status}"
-            )
+            raise SystemExit(f"failed to fetch Glaze UI asset {safe_name}: HTTP {response.status}")
         data = response.read(MAX_GLAZE_ASSET_BYTES + 1)
         if len(data) > MAX_GLAZE_ASSET_BYTES:
             raise SystemExit(f"Glaze UI asset exceeds size limit: {safe_name}")
@@ -128,9 +121,7 @@ def validate_glaze_import_closure(assets: dict[str, bytes]) -> None:
 
         for target in targets:
             if not target.startswith("./"):
-                raise SystemExit(
-                    f"Glaze import must be same-directory relative in {name}: {target}"
-                )
+                raise SystemExit(f"Glaze import must be same-directory relative in {name}: {target}")
             if any(marker in target for marker in ("?", "#", "..")):
                 raise SystemExit(f"unsafe Glaze import target in {name}: {target}")
             imported_name = require_glaze_name(target[2:])
