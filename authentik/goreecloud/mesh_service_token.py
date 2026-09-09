@@ -225,7 +225,9 @@ class MeshServiceTokenIssuer:
         return cls(active, retained)
 
     @classmethod
-    def from_environment(cls, environ: Mapping[str, str] | None = None) -> MeshServiceTokenIssuer:
+    def from_environment(
+        cls, environ: Mapping[str, str] | None = None
+    ) -> MeshServiceTokenIssuer:
         """Build the issuer from secret/public-key file references.
 
         The active private key is read only from an Identity-owned secret file.
@@ -353,7 +355,9 @@ class MeshServiceTokenIssuer:
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip()))
+    normalized = tuple(
+        dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip())
+    )
     if not normalized:
         return ()
     unknown = sorted(set(normalized) - _ALLOWED_SCOPES)
