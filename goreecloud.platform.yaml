@@ -50,7 +50,7 @@ platform_systems:
       - identity-center-site/index.html
     notes: Backup, restore, break-glass access, signing-key recovery, continuity, portability, and clean-target recovery acceptance remain mandatory and are not established by this source candidate.
   glaze_ui:
-    result: applicable-blocked
+    result: applicable-migration-required
     version: '1.1.0'
     evidence:
       - identity-center-site/glaze.lock.json
@@ -59,7 +59,7 @@ platform_systems:
       - scripts/validate_identity_public_site.py
       - .github/workflows/validate-website.yml
       - WEBSITE.md
-    notes: Identity Center source targets the published GLAZE UI V1.1 / 1.1.0 baseline, but immutable v1.1.0 contains a transitive import to missing glaze-v1.candidate.css. Identity now fails publication before writing dist when the locked CSS graph is incomplete. A corrected immutable Stable Glaze release, explicit re-pin, fresh exact-revision source/rendered/accessibility evidence, and deployed-byte verification are required before current Glaze conformance can be claimed.
+    notes: Identity Center source remains pinned to historical GLAZE UI V1.1 / 1.1.0 and therefore does not satisfy the current required GLAZE UI V1.3 / 1.3.0 Stable baseline. The V1.1 publication path also remains fail-closed because its immutable CSS graph is dependency-incomplete. Identity requires an explicit V1.3 migration, fresh exact-revision rendered/accessibility/resilience evidence, and deployed-byte verification before current Glaze conformance can be claimed.
   mesh:
     result: applicable-blocked
     version: null
@@ -123,10 +123,10 @@ external_dependencies:
 
 compatibility:
   platform_contract: '0.2'
-  glaze_ui_required: '1.1.0'
+  glaze_ui_required: '1.3.0'
   requires:
     - goreecloud-platform-contract==0.2
-    - glaze-ui==1.1.0
+    - glaze-ui==1.3.0
   provides:
     - goreecloud-identity-evidence-v1
     - goreecloud-identity-mesh-service-token-v1
@@ -166,7 +166,8 @@ conformance:
     - Privacy Shield integration and acceptance are not established.
     - Wardveil Security integration and acceptance are not established.
     - Everkeep backup, restore, key-recovery, break-glass, continuity, export, and portability acceptance are incomplete.
-    - Published GLAZE UI V1.1 / 1.1.0 has an incomplete immutable CSS import graph; Identity Center publication is fail-closed until a corrected immutable Stable release is explicitly re-pinned and revalidated.
+    - Identity Center is still pinned to historical GLAZE UI V1.1 / 1.1.0 while the required current Stable baseline is GLAZE UI V1.3 / 1.3.0; migration and current acceptance are outstanding.
+    - The historical V1.1 publication path also has an incomplete immutable CSS import graph and remains intentionally fail-closed until migration replaces it with an accepted current Stable source.
     - Identity Center rendered Human Visual Excellence, exact production deployment, and deployed-byte acceptance remain outstanding.
     - Clean-environment Identity restore, break-glass recovery, monitoring, rollback, controlled application integration, and target-environment production acceptance remain outstanding.
     - Required Stable acceptance-test and published release evidence has not been produced.
