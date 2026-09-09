@@ -225,9 +225,7 @@ class MeshServiceTokenIssuer:
         return cls(active, retained)
 
     @classmethod
-    def from_environment(
-        cls, environ: Mapping[str, str] | None = None
-    ) -> MeshServiceTokenIssuer:
+    def from_environment(cls, environ: Mapping[str, str] | None = None) -> MeshServiceTokenIssuer:
         """Build the issuer from secret/public-key file references.
 
         The active private key is read only from an Identity-owned secret file.
