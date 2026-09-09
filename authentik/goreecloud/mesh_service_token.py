@@ -353,9 +353,7 @@ class MeshServiceTokenIssuer:
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(
-        dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip())
-    )
+    normalized = tuple(dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip()))
     if not normalized:
         return ()
     unknown = sorted(set(normalized) - _ALLOWED_SCOPES)
