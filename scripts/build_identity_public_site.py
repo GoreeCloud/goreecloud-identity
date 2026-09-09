@@ -81,9 +81,7 @@ def fetch_glaze(name: str) -> bytes:
         )
         response = connection.getresponse()
         if response.status != HTTP_OK:
-            raise SystemExit(
-                f"failed to fetch Glaze UI asset {safe_name}: HTTP {response.status}"
-            )
+            raise SystemExit(f"failed to fetch Glaze UI asset {safe_name}: HTTP {response.status}")
         data = response.read(MAX_GLAZE_ASSET_BYTES + 1)
         if len(data) > MAX_GLAZE_ASSET_BYTES:
             raise SystemExit(f"Glaze UI asset exceeds size limit: {safe_name}")
