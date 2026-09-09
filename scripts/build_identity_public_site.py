@@ -57,12 +57,7 @@ def require_file(path: Path) -> Path:
 
 
 def require_glaze_name(name: str) -> str:
-    if (
-        not name.endswith(".css")
-        or "/" in name
-        or "\\" in name
-        or name in {".", ".."}
-    ):
+    if not name.endswith(".css") or "/" in name or "\\" in name or name in {".", ".."}:
         raise SystemExit(f"unsafe Glaze asset name: {name}")
     return name
 
