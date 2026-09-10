@@ -5,20 +5,16 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from authentik.goreecloud.mesh_service_token import (
-    AUDIENCE,
-    ISSUER,
     MeshServiceTokenIssuer,
     MeshSigningKey,
     VerifiedWorkloadPrincipal,
 )
 
 
-def issuer() -> MeshServiceTokenIssuer:
-    return MeshServiceTokenIssuer(
-        MeshSigningKey(
-            kid="mesh-key-temporal-bounds",
-            private_key=rsa.generate_private_key(public_exponent=65537, key_size=2048),
-        )
+def signing_key() -> MeshSigningKey:
+    return MeshSigningKey(
+        kid="mesh-key-temporal-bounds",
+        private_key=rsa.generate_private_key(public_exponent=65537, key_size=2048),
     )
 
 
@@ -31,7 +27,7 @@ def principal() -> VerifiedWorkloadPrincipal:
 
 
 def test_rejects_not_before_at_or_after_expiry() -> None:
-    token_issuer = issuer()
+    token_issuer = MeshServiceTokenIssuer(signing_key())
     now = datetime(2026, 9, 10, 5, 30, tzinfo=UTC)
 
     for offset in (1, 2, 60):
@@ -46,7 +42,8 @@ def test_rejects_not_before_at_or_after_expiry() -> None:
 
 
 def test_allows_delayed_validity_window_when_nbf_precedes_expiry() -> None:
-    token_issuer = issuer()
+    key = signing_key()
+    token_issuer = MeshServiceTokenIssuer(key)
     now = datetime(2026, 9, 10, 5, 30, tzinfo=UTC)
     token = token_issuer.issue_for_principal(
         principal=principal(),
@@ -57,13 +54,16 @@ def test_allows_delayed_validity_window_when_nbf_precedes_expiry() -> None:
         jti="temporal-window-accepted",
     )
 
-    key = token_issuer._active_key.private_key.public_key()  # test-only inspection
     claims = jwt.decode(
         token,
-        key,
+        key.private_key.public_key(),
         algorithms=["RS256"],
-        audience=AUDIENCE,
-        issuer=ISSUER,
-        options={"verify_exp": False, "verify_nbf": False},
+        options={
+            "verify_signature": True,
+            "verify_aud": False,
+            "verify_iss": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+        },
     )
     assert claims["iat"] < claims["nbf"] < claims["exp"]
