@@ -1,0 +1,24 @@
+name: GoreeCloud Black diagnostic
+
+on:
+  push:
+    branches:
+      - revamp/identity-center-current-truth-20260831
+
+permissions:
+  contents: read
+
+jobs:
+  black-diff:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: pyproject.toml
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      - name: Show canonical Black diff
+        run: uvx --from black==26.5.1 black --check --diff authentik/goreecloud/mesh_service_token.py
