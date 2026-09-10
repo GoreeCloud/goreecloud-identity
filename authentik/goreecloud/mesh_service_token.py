@@ -120,15 +120,13 @@ class MeshVerificationKey:
         key_path = Path(path)
         if not key_path.is_file():
             raise ValueError(
-                "Mesh verification key file does not exist or is not a file: "
-                f"{key_path}"
+                "Mesh verification key file does not exist or is not a file: " f"{key_path}"
             )
         try:
             loaded = serialization.load_pem_public_key(key_path.read_bytes())
         except (OSError, TypeError, ValueError) as exc:
             raise ValueError(
-                "Mesh verification key file is not a valid PEM public key: "
-                f"{key_path}"
+                "Mesh verification key file is not a valid PEM public key: " f"{key_path}"
             ) from exc
         if not isinstance(loaded, rsa.RSAPublicKey):
             raise ValueError("Mesh service-token verification keys must be RSA public keys")
@@ -161,15 +159,13 @@ class MeshSigningKey:
         key_path = Path(path)
         if not key_path.is_file():
             raise ValueError(
-                "Mesh signing key file does not exist or is not a file: "
-                f"{key_path}"
+                "Mesh signing key file does not exist or is not a file: " f"{key_path}"
             )
         try:
             loaded = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
         except (OSError, TypeError, ValueError) as exc:
             raise ValueError(
-                "Mesh signing key file is not a valid unencrypted PEM private key: "
-                f"{key_path}"
+                "Mesh signing key file is not a valid unencrypted PEM private key: " f"{key_path}"
             ) from exc
         if not isinstance(loaded, rsa.RSAPrivateKey):
             raise ValueError("Mesh service-token signing keys must be RSA private keys")
@@ -247,16 +243,14 @@ class MeshServiceTokenIssuer:
             retained = json.loads(retained_raw)
         except json.JSONDecodeError as exc:
             raise ValueError(
-                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of "
-                "kid-to-file mappings"
+                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of " "kid-to-file mappings"
             ) from exc
         if not isinstance(retained, dict) or not all(
             isinstance(kid, str) and isinstance(path, str) and path.strip()
             for kid, path in retained.items()
         ):
             raise ValueError(
-                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of "
-                "kid-to-file mappings"
+                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of " "kid-to-file mappings"
             )
 
         return cls.from_key_files(
@@ -355,9 +349,7 @@ class MeshServiceTokenIssuer:
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(
-        dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip())
-    )
+    normalized = tuple(dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip()))
     if not normalized:
         return ()
     unknown = sorted(set(normalized) - _ALLOWED_SCOPES)
