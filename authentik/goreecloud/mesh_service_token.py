@@ -328,6 +328,8 @@ class MeshServiceTokenIssuer:
         if not_before_at > issued_at + timedelta(seconds=60):
             raise ValueError("not_before cannot exceed the allowed 60-second clock skew")
         expires_at = issued_at + timedelta(seconds=lifetime_seconds)
+        if not_before_at >= expires_at:
+            raise ValueError("Mesh service-token not_before must be before expiry")
         token_id = str(jti or uuid4()).strip()
         if not token_id or len(token_id) > MAX_TOKEN_ID_LENGTH:
             raise ValueError("jti must be a non-empty opaque identifier")
