@@ -98,9 +98,7 @@ def _validate_runtime_acceptance(contract: dict[str, Any]) -> None:
     acceptance = contract.get("runtimeAcceptance")
     if not isinstance(acceptance, dict):
         raise ContractError("runtimeAcceptance object is required")
-    if acceptance.get("registrationState") != (
-        "contract_defined_runtime_registration_pending"
-    ):
+    if acceptance.get("registrationState") != "contract_defined_runtime_registration_pending":
         raise ContractError("runtime registration must remain pending in the source contract")
     if acceptance.get("networkVerifierEvidenceVersion") != (
         "goreecloud.network.identity.acceptance/v1"
@@ -153,9 +151,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
     _validate_secret_policy(contract)
 
 
-def validate_observed(
-    contract: dict[str, Any], observed: dict[str, Any]
-) -> dict[str, Any]:
+def validate_observed(contract: dict[str, Any], observed: dict[str, Any]) -> dict[str, Any]:
     validate_contract(contract)
 
     secret_policy = contract["secretPolicy"]
@@ -188,9 +184,7 @@ def validate_observed(
     if observed.get("registrationPresent") is not True:
         raise ContractError("observed runtime must explicitly report registrationPresent=true")
     if observed.get("productionAccepted") is not False:
-        raise ContractError(
-            "observed registration evidence must not claim production acceptance"
-        )
+        raise ContractError("observed registration evidence must not claim production acceptance")
 
     return {
         "evidenceVersion": "goreecloud.identity.network-registration-observation/v1",
