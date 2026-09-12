@@ -74,9 +74,7 @@ class FakeOpener:
         return self.response
 
 
-def accepted_payload(
-    evidence_id: str = "identity-authentication-001",
-) -> dict[str, object]:
+def accepted_payload(evidence_id: str = "identity-authentication-001") -> dict[str, object]:
     return {
         "envelope": {"id": evidence_id},
         "replayed": False,
@@ -125,10 +123,7 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
     assert token not in repr(receipt)
     assert token not in json.dumps(submitted)
     assert fake.last_timeout == EXPECTED_DELIVERY_TIMEOUT_SECONDS
-    assert (
-        fake.last_request.full_url
-        == "https://mesh.goreecloud.com/v1/evidence/envelopes"
-    )
+    assert fake.last_request.full_url == "https://mesh.goreecloud.com/v1/evidence/envelopes"
     assert fake.last_request.get_header("Authorization") == f"Bearer {token}"
 
 
@@ -171,9 +166,7 @@ def test_delivery_refuses_redirect(monkeypatch) -> None:
     monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
 
     with pytest.raises(MeshDeliveryError, match="refused an HTTP redirect"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
 def test_delivery_rejects_oversized_mesh_response(monkeypatch) -> None:
@@ -181,27 +174,21 @@ def test_delivery_rejects_oversized_mesh_response(monkeypatch) -> None:
     monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
 
     with pytest.raises(MeshDeliveryError, match="oversized or empty response"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
 def test_delivery_fails_closed_on_receipt_binding_mismatch(monkeypatch) -> None:
     wrong_id = FakeOpener(FakeResponse(accepted_payload("different-evidence-id")))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_id)
     with pytest.raises(MeshDeliveryError, match="submitted evidence id"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
     wrong_service_payload = accepted_payload()
     wrong_service_payload["producer_service_id"] = "privacy-shield"
     wrong_service = FakeOpener(FakeResponse(wrong_service_payload))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_service)
     with pytest.raises(MeshDeliveryError, match="GoreeCloud Identity service identity"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
 def test_delivery_requires_typed_replay_and_timezone_bound_acceptance(monkeypatch) -> None:
@@ -213,9 +200,7 @@ def test_delivery_requires_typed_replay_and_timezone_bound_acceptance(monkeypatc
         lambda *handlers: FakeOpener(FakeResponse(replay_string)),
     )
     with pytest.raises(MeshDeliveryError, match="replay state"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
     naive_time = accepted_payload()
     naive_time["accepted_at"] = "2026-08-29T12:01:00"
@@ -225,9 +210,7 @@ def test_delivery_requires_typed_replay_and_timezone_bound_acceptance(monkeypatc
         lambda *handlers: FakeOpener(FakeResponse(naive_time)),
     )
     with pytest.raises(MeshDeliveryError, match="timezone"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
 def test_delivery_rejects_hidden_acceptance_fields(monkeypatch) -> None:
@@ -239,9 +222,7 @@ def test_delivery_rejects_hidden_acceptance_fields(monkeypatch) -> None:
         lambda *handlers: FakeOpener(FakeResponse(hidden_top_level)),
     )
     with pytest.raises(MeshDeliveryError, match="receipt shape is not closed"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
     hidden_envelope = accepted_payload()
     hidden_envelope["envelope"] = {
@@ -254,9 +235,7 @@ def test_delivery_rejects_hidden_acceptance_fields(monkeypatch) -> None:
         lambda *handlers: FakeOpener(FakeResponse(hidden_envelope)),
     )
     with pytest.raises(MeshDeliveryError, match="envelope shape is not closed"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
 def test_delivery_requires_canonical_utc_acceptance_time(monkeypatch) -> None:
@@ -268,6 +247,4 @@ def test_delivery_requires_canonical_utc_acceptance_time(monkeypatch) -> None:
         lambda *handlers: FakeOpener(FakeResponse(equivalent_offset_time)),
     )
     with pytest.raises(MeshDeliveryError, match="canonical UTC"):
-        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
-            envelope(), bearer_token="token"
-        )
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
