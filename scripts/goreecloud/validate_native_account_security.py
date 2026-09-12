@@ -58,9 +58,10 @@ def require(condition: bool, message: str) -> None:
 
 
 def closed_object(
-    value: Any, expected_keys: set[str], name: str
+    value: object, expected_keys: set[str], name: str
 ) -> dict[str, Any]:
-    require(isinstance(value, dict), f"{name} object is required")
+    if not isinstance(value, dict):
+        raise ContractError(f"{name} object is required")
     require(set(value) == expected_keys, f"{name} fields must be closed and exact")
     return value
 
@@ -380,7 +381,10 @@ def validate_migration_boundary(contract: dict[str, Any]) -> None:
 
 
 def validate_contract(contract: dict[str, Any]) -> None:
-    require(set(contract) == TOP_LEVEL_KEYS, "account-security top-level fields must be closed and exact")
+    require(
+        set(contract) == TOP_LEVEL_KEYS,
+        "account-security top-level fields must be closed and exact",
+    )
     require(
         contract.get("schemaVersion") == EXPECTED_SCHEMA,
         "unexpected native account-security schema",
