@@ -4,7 +4,12 @@ from urllib import error, request
 
 import pytest
 
-from goreecloud_identity.mesh_delivery import MeshDeliveryClient, MeshDeliveryError
+from goreecloud_identity.mesh_delivery import (
+    MAX_ENVELOPE_BYTES,
+    MAX_RESPONSE_BYTES,
+    MeshDeliveryClient,
+    MeshDeliveryError,
+)
 
 EXPECTED_DELIVERY_TIMEOUT_SECONDS = 3.0
 
@@ -33,9 +38,9 @@ def envelope() -> dict[str, object]:
 
 
 class FakeResponse:
-    def __init__(self, payload: dict[str, object], status: int = 201) -> None:
+    def __init__(self, payload: dict[str, object] | None = None, status: int = 201, body: bytes | None = None) -> None:
         self.status = status
-        self._body = json.dumps(payload).encode("utf-8")
+        self._body = body if body is not None else json.dumps(payload or {}).encode("utf-8")
 
     def __enter__(self):
         return self
@@ -43,8 +48,10 @@ class FakeResponse:
     def __exit__(self, exc_type, exc, tb):
         return False
 
-    def read(self) -> bytes:
-        return self._body
+    def read(self, size: int = -1) -> bytes:
+        if size is None or size < 0:
+            return self._body
+        return self._body[:size]
 
 
 class FakeOpener:
@@ -71,10 +78,12 @@ def accepted_payload(evidence_id: str = "identity-authentication-001") -> dict[s
     }
 
 
-def test_delivery_requires_https_except_loopback() -> None:
+def test_delivery_requires_origin_only_https_except_loopback() -> None:
     MeshDeliveryClient("https://mesh.goreecloud.com")
+    MeshDeliveryClient("https://mesh.goreecloud.com/")
     MeshDeliveryClient("http://127.0.0.1:8787")
     MeshDeliveryClient("http://localhost:8787")
+    MeshDeliveryClient("http://[::1]:8787")
 
     with pytest.raises(ValueError):
         MeshDeliveryClient("http://mesh.goreecloud.com")
@@ -82,6 +91,10 @@ def test_delivery_requires_https_except_loopback() -> None:
         MeshDeliveryClient("https://user:secret@mesh.goreecloud.com")
     with pytest.raises(ValueError):
         MeshDeliveryClient("https://mesh.goreecloud.com?token=secret")
+    with pytest.raises(ValueError, match="without an application path"):
+        MeshDeliveryClient("https://mesh.goreecloud.com/proxy")
+    with pytest.raises(ValueError, match="canonical"):
+        MeshDeliveryClient(" https://mesh.goreecloud.com")
 
 
 def test_delivery_binds_identity_producer_and_receipt_without_returning_credential(
@@ -101,6 +114,7 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
     assert receipt.evidence_id == submitted["id"]
     assert receipt.producer_service_id == "goreecloud-identity"
     assert receipt.replayed is False
+    assert receipt.accepted_at == "2026-08-29T12:01:00Z"
     assert token not in repr(receipt)
     assert token not in json.dumps(submitted)
     assert fake.last_timeout == EXPECTED_DELIVERY_TIMEOUT_SECONDS
@@ -108,7 +122,7 @@ def test_delivery_binds_identity_producer_and_receipt_without_returning_credenti
     assert fake.last_request.get_header("Authorization") == f"Bearer {token}"
 
 
-def test_delivery_rejects_cross_producer_submission_and_header_injection() -> None:
+def test_delivery_rejects_cross_producer_submission_and_noncanonical_credential() -> None:
     client = MeshDeliveryClient("https://mesh.goreecloud.com")
     wrong = envelope()
     wrong["producer"] = {"system": "wardveil-security"}
@@ -117,6 +131,22 @@ def test_delivery_rejects_cross_producer_submission_and_header_injection() -> No
         client.deliver(wrong, bearer_token="token")
     with pytest.raises(ValueError):
         client.deliver(envelope(), bearer_token="token\r\nInjected: true")
+    with pytest.raises(ValueError, match="canonical"):
+        client.deliver(envelope(), bearer_token=" token")
+
+
+def test_delivery_bounds_outbound_envelope_before_network(monkeypatch) -> None:
+    fake = FakeOpener(FakeResponse(accepted_payload()))
+    monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
+    oversized = envelope()
+    oversized["padding"] = "x" * MAX_ENVELOPE_BYTES
+
+    with pytest.raises(ValueError, match="size bound"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(
+            oversized,
+            bearer_token="token",
+        )
+    assert fake.last_request is None
 
 
 def test_delivery_refuses_redirect(monkeypatch) -> None:
@@ -134,6 +164,14 @@ def test_delivery_refuses_redirect(monkeypatch) -> None:
         MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
 
 
+def test_delivery_rejects_oversized_mesh_response(monkeypatch) -> None:
+    fake = FakeOpener(FakeResponse(body=b"{" + (b"x" * MAX_RESPONSE_BYTES) + b"}"))
+    monkeypatch.setattr(request, "build_opener", lambda *handlers: fake)
+
+    with pytest.raises(MeshDeliveryError, match="oversized or empty response"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+
 def test_delivery_fails_closed_on_receipt_binding_mismatch(monkeypatch) -> None:
     wrong_id = FakeOpener(FakeResponse(accepted_payload("different-evidence-id")))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_id)
@@ -145,4 +183,18 @@ def test_delivery_fails_closed_on_receipt_binding_mismatch(monkeypatch) -> None:
     wrong_service = FakeOpener(FakeResponse(wrong_service_payload))
     monkeypatch.setattr(request, "build_opener", lambda *handlers: wrong_service)
     with pytest.raises(MeshDeliveryError, match="GoreeCloud Identity service identity"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+
+def test_delivery_requires_typed_replay_and_timezone_bound_acceptance(monkeypatch) -> None:
+    replay_string = accepted_payload()
+    replay_string["replayed"] = "false"
+    monkeypatch.setattr(request, "build_opener", lambda *handlers: FakeOpener(FakeResponse(replay_string)))
+    with pytest.raises(MeshDeliveryError, match="replay state"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+    naive_time = accepted_payload()
+    naive_time["accepted_at"] = "2026-08-29T12:01:00"
+    monkeypatch.setattr(request, "build_opener", lambda *handlers: FakeOpener(FakeResponse(naive_time)))
+    with pytest.raises(MeshDeliveryError, match="timezone"):
         MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
