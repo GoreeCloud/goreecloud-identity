@@ -137,9 +137,7 @@ def _read_public_key_file(path: str | os.PathLike[str]) -> bytes:
     if not stat.S_ISREG(path_info.st_mode):
         raise ValueError("Mesh verification key file must be a regular file")
     if stat.S_IMODE(path_info.st_mode) & 0o022:
-        raise ValueError(
-            "Mesh verification key file must not be writable by group or other users"
-        )
+        raise ValueError("Mesh verification key file must not be writable by group or other users")
     if path_info.st_size <= 0 or path_info.st_size > MAX_PUBLIC_KEY_FILE_BYTES:
         raise ValueError(
             f"Mesh verification key file must be between 1 and {MAX_PUBLIC_KEY_FILE_BYTES} bytes"
@@ -155,22 +153,16 @@ def _read_public_key_file(path: str | os.PathLike[str]) -> bytes:
     try:
         opened_info = os.fstat(fd)
         if not stat.S_ISREG(opened_info.st_mode):
-            raise ValueError(
-                "Mesh verification key file must remain a regular file when opened"
-            )
+            raise ValueError("Mesh verification key file must remain a regular file when opened")
         if (opened_info.st_dev, opened_info.st_ino) != (
             path_info.st_dev,
             path_info.st_ino,
         ):
             raise ValueError("Mesh verification key file changed while being opened")
         if stat.S_IMODE(opened_info.st_mode) & 0o022:
-            raise ValueError(
-                "Mesh verification key file permissions changed to an unsafe mode"
-            )
+            raise ValueError("Mesh verification key file permissions changed to an unsafe mode")
         if opened_info.st_size <= 0 or opened_info.st_size > MAX_PUBLIC_KEY_FILE_BYTES:
-            raise ValueError(
-                "Mesh verification key file size changed outside the accepted bound"
-            )
+            raise ValueError("Mesh verification key file size changed outside the accepted bound")
         with os.fdopen(fd, "rb", closefd=False) as handle:
             body = handle.read(MAX_PUBLIC_KEY_FILE_BYTES + 1)
         if not body or len(body) > MAX_PUBLIC_KEY_FILE_BYTES:
@@ -235,9 +227,7 @@ class MeshVerificationKey:
         try:
             loaded = serialization.load_pem_public_key(_read_public_key_file(key_path))
         except (OSError, TypeError, ValueError) as exc:
-            if isinstance(exc, ValueError) and str(exc).startswith(
-                "Mesh verification key file"
-            ):
+            if isinstance(exc, ValueError) and str(exc).startswith("Mesh verification key file"):
                 raise
             raise ValueError(
                 "Mesh verification key file is not a valid PEM public key: " f"{key_path}"
