@@ -50,7 +50,7 @@ platform_systems:
     evidence:
       - GOREECLOUD.md
       - docs/goreecloud/UI-CUSTOMIZATION.md
-    notes: The native Identity Center and current applicable Glaze UI experience remain incomplete and unaccepted; inherited authentik presentation does not establish GoreeCloud Glaze UI conformance. The current shared consumer target is GLAZE UI V1.3 / 1.3.0.
+    notes: The native Identity Center and current Stable Glaze UI 1.3.0 experience remain incomplete and unaccepted; inherited authentik presentation does not establish GoreeCloud Glaze UI conformance.
   mesh:
     result: applicable-migration-required
     version: null
@@ -79,7 +79,7 @@ platform_systems:
     evidence:
       - GOREECLOUD.md
       - SECURITY.md
-    notes: GoreeCloud Identity must establish the account, device, service, session, authorization, pairing, revocation, and delegated-authority boundaries used by GoreeCloud Sync, but no accepted Identity-to-Sync production integration is established by the current main source baseline.
+    notes: GoreeCloud Identity must establish the account, device, service, session, authorization, pairing, revocation, and delegated-authority boundaries used by GoreeCloud Sync. Sync may coordinate explicitly authorized cross-device Identity-owned state, but must not become credential, authentication, session, or authorization authority. No accepted Identity-to-Sync runtime integration, synchronization policy, conflict model, revocation behavior, or production evidence is established by the current source baseline.
 
 health:
   health_endpoint: null
@@ -138,9 +138,9 @@ conformance:
   blockers:
     - GoreeCloud Identity remains in active native migration and the substantial authentik-derived runtime is transitional rather than the accepted permanent GoreeCloud architecture.
     - Production GoreeCloud-wide SSO and authentication cutover are not approved.
-    - Native Identity Center implementation and acceptance against the current Stable Glaze UI 1.3.0 baseline are incomplete.
+    - Native Identity Center implementation and rendered, accessibility, representative-target, rollback, and production acceptance against current Stable Glaze UI 1.3.0 are incomplete.
     - GoreeCloud Manager integration and acceptance are not established.
-    - GoreeCloud Sync identity/device/session/authorization integration and production acceptance are not established.
+    - GoreeCloud Sync account/device/session/authorization integration, synchronization policy, conflict semantics, revocation behavior, and production acceptance are not established.
     - Privacy Shield integration and acceptance are not established.
     - Wardveil Security integration and acceptance are not established.
     - Everkeep backup, restore, key-recovery, break-glass, and continuity acceptance are incomplete.
