@@ -29,7 +29,7 @@ func (a *Application) configureProxy() error {
 	}
 	rsp := sentry.StartSpan(context.TODO(), "authentik.outposts.proxy.application_transport")
 	rp := &httputil.ReverseProxy{
-		Director:       a.proxyModifyRequest(u),
+		Rewrite:        a.proxyRewriteRequest(u),
 		Transport:      web.NewTracingTransport(rsp.Context(), a.getUpstreamTransport()),
 		ErrorHandler:   a.newProxyErrorHandler(),
 		ModifyResponse: a.proxyModifyResponse,
@@ -66,6 +66,29 @@ func (a *Application) configureProxy() error {
 		}).Observe(float64(elapsed) / float64(time.Second))
 	})
 	return nil
+}
+
+func (a *Application) proxyRewriteRequest(ou *url.URL) func(req *httputil.ProxyRequest) {
+	modify := a.proxyModifyRequest(ou)
+	return func(pr *httputil.ProxyRequest) {
+		// Rewrite removes forwarding headers before this hook. Restore the
+		// Director-era X-Forwarded-For input before SetXForwarded so the client
+		// address is appended rather than silently discarding trusted lineage.
+		if prior := pr.In.Header.Values("X-Forwarded-For"); len(prior) > 0 {
+			pr.Out.Header["X-Forwarded-For"] = append([]string(nil), prior...)
+		}
+		priorProto := append([]string(nil), pr.In.Header.Values("X-Forwarded-Proto")...)
+		pr.SetXForwarded()
+
+		// Director did not synthesize X-Forwarded-Proto. Preserve exactly what
+		// arrived instead of expanding proxy authority during the API migration.
+		if len(priorProto) > 0 {
+			pr.Out.Header["X-Forwarded-Proto"] = priorProto
+		} else {
+			pr.Out.Header.Del("X-Forwarded-Proto")
+		}
+		modify(pr.Out)
+	}
 }
 
 func (a *Application) proxyModifyRequest(ou *url.URL) func(req *http.Request) {
