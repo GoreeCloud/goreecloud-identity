@@ -6,11 +6,18 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "goreecloud" / "validate_network_application_registration.py"
+SCRIPT = (
+    Path(__file__).resolve().parents[2]
+    / "scripts"
+    / "goreecloud"
+    / "validate_network_application_registration.py"
+)
 SPEC = importlib.util.spec_from_file_location("network_registration_validator", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 validator = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(validator)
+
+EXPECTED_OBSERVED_STATE = "observed_registration_matches_contract_runtime_acceptance_pending"
 
 
 class NetworkApplicationRegistrationContractTests(unittest.TestCase):
@@ -35,7 +42,7 @@ class NetworkApplicationRegistrationContractTests(unittest.TestCase):
             "productionAccepted": False,
         }
         evidence = validator.validate_observed(self.contract, observed)
-        self.assertEqual(evidence["state"], "observed_registration_matches_contract_runtime_acceptance_pending")
+        self.assertEqual(evidence["state"], EXPECTED_OBSERVED_STATE)
         self.assertTrue(evidence["runtimeConfigured"])
         self.assertFalse(evidence["productionAccepted"])
 
