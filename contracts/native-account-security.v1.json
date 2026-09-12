@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "goreecloud.identity.native-account-security/v1",
+  "lifecycle": "development",
+  "canonicalAuthority": "GoreeCloud Identity",
+  "architecture": "goreecloud-owned-native",
+  "runtimeImplementationState": "contract_only",
+  "productionAccepted": false,
+  "authenticationMethods": {
+    "password": {
+      "supportedWhereRequired": true,
+      "plaintextStorageAllowed": false,
+      "protectedVerifierRequired": true,
+      "runtimeAccepted": false
+    },
+    "passkeyWebAuthn": {
+      "standardsBased": true,
+      "privateKeyExportAllowed": false,
+      "userVerificationPolicyRequired": true,
+      "runtimeAccepted": false
+    },
+    "totp": {
+      "multiFactorPurpose": true,
+      "secretProtectionRequired": true,
+      "replayProtectionRequired": true,
+      "runtimeAccepted": false
+    }
+  },
+  "recovery": {
+    "securityDowngradeAllowed": false,
+    "reusableRecoveryMaterialInLogsAllowed": false,
+    "reusableRecoveryMaterialInOrdinaryDocsAllowed": false,
+    "normalServiceExclusiveDependencyAllowed": false,
+    "breakGlassAdministrationSeparate": true,
+    "runtimeAccepted": false
+  },
+  "sessions": {
+    "visibilityRequired": true,
+    "expirationRequired": true,
+    "revocationRequired": true,
+    "accountDisablementRequiresRevocationEvaluation": true,
+    "sessionSecretDisclosureAllowed": false,
+    "runtimeAccepted": false
+  },
+  "deviceAndCredentialVisibility": {
+    "visibilityRequired": true,
+    "revocationCapabilityRequired": true,
+    "reusableSecretDisclosureAllowed": false,
+    "runtimeAccepted": false
+  },
+  "authenticationAudit": {
+    "requiredEvents": [
+      "authentication_succeeded",
+      "authentication_failed",
+      "mfa_enrolled",
+      "mfa_removed",
+      "credential_added",
+      "credential_revoked",
+      "session_created",
+      "session_revoked",
+      "recovery_started",
+      "recovery_completed",
+      "account_disabled"
+    ],
+    "passwordsAllowed": false,
+    "tokensAllowed": false,
+    "mfaSecretsAllowed": false,
+    "recoverySecretsAllowed": false,
+    "runtimeAccepted": false
+  },
+  "redirectValidation": {
+    "exactRegisteredRedirectRequired": true,
+    "wildcardRedirectDefaultAllowed": false,
+    "httpsRequiredOutsideExplicitLoopbackDevelopment": true,
+    "userinfoInRedirectAllowed": false,
+    "fragmentInRedirectAllowed": false,
+    "runtimeAccepted": false
+  },
+  "secretProtection": {
+    "sourceControlledReusableSecretsAllowed": false,
+    "ordinaryDocumentationReusableSecretsAllowed": false,
+    "authenticationLogReusableSecretsAllowed": false,
+    "protectedRuntimeConfigurationRequired": true,
+    "restrictiveRuntimePermissionsRequired": true,
+    "runtimeAccepted": false
+  },
+  "abuseProtection": {
+    "boundedAuthenticationAttemptsRequired": true,
+    "rateLimitingOrEquivalentRequired": true,
+    "failClosedOnProtectionFailure": true,
+    "securitySensitiveDefaultsFailClosed": true,
+    "runtimeAccepted": false
+  },
+  "migrationBoundary": {
+    "inheritedAuthentikFeatureParityIsNativeAcceptance": false,
+    "inheritedRuntime": "transitional_reference_only",
+    "nativeRuntimeImplementationRequired": true,
+    "applicationOwnedAuthorizationPreserved": true,
+    "applicationOwnedDataPreserved": true
+  },
+  "authorityTransfer": false
+}
