@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "goreecloud.identity.native-account-model/v1",
+  "lifecycle": "development",
+  "canonicalAuthority": "GoreeCloud Identity",
+  "architecture": "goreecloud-owned-native",
+  "runtimeImplementationState": "contract_only",
+  "productionAccepted": false,
+  "identityKinds": {
+    "human": {
+      "canonical": true,
+      "administratorIdentityDistinct": true,
+      "supportsMultipleUsers": true
+    },
+    "administrator": {
+      "canonical": true,
+      "humanIdentityRequired": true,
+      "separatePrivileges": true
+    },
+    "service": {
+      "canonical": true,
+      "humanIdentityRequired": false,
+      "separateCredentialLifecycle": true
+    }
+  },
+  "registrationPolicy": {
+    "defaultMode": "invite_only",
+    "administratorCreatedAccounts": true,
+    "selfRegistration": {
+      "defaultEnabled": false,
+      "operatorMayEnable": true,
+      "explicitConfigurationRequired": true
+    }
+  },
+  "humanAccountLifecycle": [
+    "invited",
+    "active",
+    "disabled",
+    "archived"
+  ],
+  "disablement": {
+    "newAuthenticationDenied": true,
+    "activeSessionsRequireRevocationEvaluation": true,
+    "applicationOwnedDataDeletionAuthorized": false,
+    "applicationOwnedDataOwnershipTransferred": false
+  },
+  "authorizationModel": {
+    "groupsSupported": true,
+    "rolesSupported": true,
+    "leastPrivilegeRequired": true,
+    "administratorPrivilegeImplicitForHuman": false
+  },
+  "migrationBoundary": {
+    "inheritedRuntime": "transitional_reference_only",
+    "inheritedObjectNamesCanonical": false,
+    "nativeMigrationRequired": true,
+    "silentIdentityRebindingAllowed": false,
+    "applicationOwnedDataPreserved": true
+  },
+  "authorityTransfer": false
+}
