@@ -221,7 +221,8 @@ def test_rejects_unknown_principal_scope_excessive_lifetime_and_invalid_service_
 
 
 def test_rejects_weak_keys_duplicate_kids_and_naive_time() -> None:
-    # Deliberately weak fixture: this negative test proves Identity rejects RSA keys below 2048 bits.
+    # Deliberately weak fixture: this negative test proves Identity rejects RSA keys
+    # below 2048 bits.
     weak = rsa.generate_private_key(  # nosec B505
         public_exponent=65537,
         key_size=1024,
