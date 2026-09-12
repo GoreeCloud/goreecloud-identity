@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "goreecloud.identity.application-registration/v1",
+  "application": {
+    "id": "goreecloud-network",
+    "displayName": "GoreeCloud Network",
+    "lifecycle": "Development",
+    "productionAccepted": false,
+    "identityAuthority": "GoreeCloud Identity",
+    "resourceAudience": "goreecloud-network",
+    "administratorScope": "goreecloud.network.admin"
+  },
+  "issuer": {
+    "expected": "https://identity.goreecloud.com/application/o/network/",
+    "discoveryRequired": true
+  },
+  "serverIntrospectionClient": {
+    "id": "goreecloud-network-server",
+    "clientType": "confidential",
+    "credentialHandling": "runtime_secret_only",
+    "purpose": "authenticate the Network server to the GoreeCloud Identity token-introspection endpoint",
+    "redirectUris": []
+  },
+  "interactiveAdministration": {
+    "state": "not_implemented",
+    "detail": "Network does not yet implement an interactive GoreeCloud Identity login flow. Interactive client registrations and redirect URIs must be defined and independently validated before production SSO acceptance.",
+    "surfaces": {
+      "webDashboard": "pending_protocol_and_redirect_validation",
+      "android": "pending_protocol_and_redirect_validation",
+      "googleTv": "pending_protocol_and_redirect_validation",
+      "ios": "pending_protocol_and_redirect_validation"
+    }
+  },
+  "runtimeAcceptance": {
+    "registrationState": "contract_defined_runtime_registration_pending",
+    "networkVerifierEvidenceVersion": "goreecloud.network.identity.acceptance/v1",
+    "requiredChecks": [
+      "client_registration",
+      "issuer_and_discovery",
+      "audience",
+      "administrator_scope",
+      "token_introspection",
+      "login_when_interactive_flow_exists",
+      "logout_when_interactive_flow_exists",
+      "session_expiration",
+      "disabled_account_behavior",
+      "mfa_interaction_when_applicable",
+      "account_mapping",
+      "identity_provider_outage",
+      "recovery",
+      "rollback"
+    ],
+    "successfulProbeState": "runtime_probe_passed_production_acceptance_pending",
+    "productionAccepted": false
+  },
+  "secretPolicy": {
+    "repositoryMayContainReusableSecrets": false,
+    "observedEvidenceMayContainReusableSecrets": false,
+    "prohibitedEvidenceFields": [
+      "clientSecret",
+      "secret",
+      "accessToken",
+      "refreshToken",
+      "idToken",
+      "privateKey",
+      "password",
+      "recoveryCode"
+    ]
+  }
+}

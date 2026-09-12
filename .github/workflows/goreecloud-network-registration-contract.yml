@@ -1,0 +1,34 @@
+name: GoreeCloud Network Identity Registration Contract
+
+on:
+  push:
+    branches: [main, "develop/**"]
+    paths:
+      - "docs/goreecloud/integrations/network-application-registration.v1.json"
+      - "docs/goreecloud/integrations/NETWORK.md"
+      - "scripts/goreecloud/validate_network_application_registration.py"
+      - "tests/goreecloud/test_network_application_registration.py"
+      - ".github/workflows/goreecloud-network-registration-contract.yml"
+  pull_request:
+    paths:
+      - "docs/goreecloud/integrations/network-application-registration.v1.json"
+      - "docs/goreecloud/integrations/NETWORK.md"
+      - "scripts/goreecloud/validate_network_application_registration.py"
+      - "tests/goreecloud/test_network_application_registration.py"
+      - ".github/workflows/goreecloud-network-registration-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-network-registration-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Validate machine-readable registration contract
+        run: python scripts/goreecloud/validate_network_application_registration.py
+      - name: Test registration evidence boundary
+        run: python tests/goreecloud/test_network_application_registration.py -v
