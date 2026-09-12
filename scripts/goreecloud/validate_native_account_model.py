@@ -27,10 +27,18 @@ def require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
+def require_object(value: object, message: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ContractError(message)
+    return value
+
+
 def validate_identity_kinds(contract: dict[str, Any]) -> None:
-    kinds = contract.get("identityKinds")
-    require(isinstance(kinds, dict), "identityKinds object is required")
-    require(set(kinds) == {"human", "administrator", "service"}, "identity kinds must be closed")
+    kinds = require_object(contract.get("identityKinds"), "identityKinds object is required")
+    require(
+        set(kinds) == {"human", "administrator", "service"},
+        "identity kinds must be closed",
+    )
 
     human = kinds["human"]
     administrator = kinds["administrator"]
@@ -43,8 +51,14 @@ def validate_identity_kinds(contract: dict[str, Any]) -> None:
         human.get("administratorIdentityDistinct") is True,
         "administrator identity must remain distinct from ordinary human identity",
     )
-    require(human.get("supportsMultipleUsers") is True, "multi-user human identity is required")
-    require(administrator.get("canonical") is True, "administrator identity must be canonical")
+    require(
+        human.get("supportsMultipleUsers") is True,
+        "multi-user human identity is required",
+    )
+    require(
+        administrator.get("canonical") is True,
+        "administrator identity must be canonical",
+    )
     require(
         administrator.get("humanIdentityRequired") is True,
         "administrator identity must bind to a human identity",
@@ -65,15 +79,20 @@ def validate_identity_kinds(contract: dict[str, Any]) -> None:
 
 
 def validate_registration(contract: dict[str, Any]) -> None:
-    policy = contract.get("registrationPolicy")
-    require(isinstance(policy, dict), "registrationPolicy object is required")
-    require(policy.get("defaultMode") == "invite_only", "registration must default to invite-only")
+    policy = require_object(
+        contract.get("registrationPolicy"), "registrationPolicy object is required"
+    )
+    require(
+        policy.get("defaultMode") == "invite_only",
+        "registration must default to invite-only",
+    )
     require(
         policy.get("administratorCreatedAccounts") is True,
         "administrator-created accounts must remain supported",
     )
-    self_registration = policy.get("selfRegistration")
-    require(isinstance(self_registration, dict), "selfRegistration policy is required")
+    self_registration = require_object(
+        policy.get("selfRegistration"), "selfRegistration policy is required"
+    )
     require(
         self_registration.get("defaultEnabled") is False,
         "self-registration must remain disabled by default",
@@ -92,8 +111,9 @@ def validate_lifecycle_and_data_boundary(contract: dict[str, Any]) -> None:
     lifecycle = contract.get("humanAccountLifecycle")
     require(lifecycle == EXPECTED_LIFECYCLE, "human account lifecycle states drifted")
 
-    disablement = contract.get("disablement")
-    require(isinstance(disablement, dict), "disablement policy is required")
+    disablement = require_object(
+        contract.get("disablement"), "disablement policy is required"
+    )
     require(
         disablement.get("newAuthenticationDenied") is True,
         "disabled accounts must deny new authentication",
@@ -113,8 +133,9 @@ def validate_lifecycle_and_data_boundary(contract: dict[str, Any]) -> None:
 
 
 def validate_migration_boundary(contract: dict[str, Any]) -> None:
-    migration = contract.get("migrationBoundary")
-    require(isinstance(migration, dict), "migrationBoundary object is required")
+    migration = require_object(
+        contract.get("migrationBoundary"), "migrationBoundary object is required"
+    )
     require(
         migration.get("inheritedRuntime") == "transitional_reference_only",
         "inherited runtime must remain transitional reference infrastructure",
@@ -123,7 +144,10 @@ def validate_migration_boundary(contract: dict[str, Any]) -> None:
         migration.get("inheritedObjectNamesCanonical") is False,
         "inherited object names must not become canonical GoreeCloud Identity names",
     )
-    require(migration.get("nativeMigrationRequired") is True, "native migration must remain required")
+    require(
+        migration.get("nativeMigrationRequired") is True,
+        "native migration must remain required",
+    )
     require(
         migration.get("silentIdentityRebindingAllowed") is False,
         "migration must not silently rebind identity",
@@ -135,8 +159,14 @@ def validate_migration_boundary(contract: dict[str, Any]) -> None:
 
 
 def validate_contract(contract: dict[str, Any]) -> None:
-    require(contract.get("schemaVersion") == EXPECTED_SCHEMA, "unexpected account-model schema")
-    require(contract.get("lifecycle") == "development", "account-model lifecycle must be development")
+    require(
+        contract.get("schemaVersion") == EXPECTED_SCHEMA,
+        "unexpected account-model schema",
+    )
+    require(
+        contract.get("lifecycle") == "development",
+        "account-model lifecycle must be development",
+    )
     require(
         contract.get("canonicalAuthority") == "GoreeCloud Identity",
         "canonical identity authority must be GoreeCloud Identity",
@@ -153,7 +183,10 @@ def validate_contract(contract: dict[str, Any]) -> None:
         contract.get("productionAccepted") is False,
         "source contract must not claim production acceptance",
     )
-    require(contract.get("authorityTransfer") is False, "Identity authority must not transfer")
+    require(
+        contract.get("authorityTransfer") is False,
+        "Identity authority must not transfer",
+    )
     validate_identity_kinds(contract)
     validate_registration(contract)
     validate_lifecycle_and_data_boundary(contract)
