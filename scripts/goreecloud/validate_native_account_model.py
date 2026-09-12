@@ -80,9 +80,7 @@ def validate_identity_kinds(contract: dict[str, Any]) -> None:
 
 
 def validate_registration(contract: dict[str, Any]) -> None:
-    policy = require_object(
-        contract.get("registrationPolicy"), "registrationPolicy object is required"
-    )
+    policy = require_object(contract.get("registrationPolicy"), "registrationPolicy object is required")
     require(
         policy.get("defaultMode") == "invite_only",
         "registration must default to invite-only",
@@ -91,9 +89,7 @@ def validate_registration(contract: dict[str, Any]) -> None:
         policy.get("administratorCreatedAccounts") is True,
         "administrator-created accounts must remain supported",
     )
-    self_registration = require_object(
-        policy.get("selfRegistration"), "selfRegistration policy is required"
-    )
+    self_registration = require_object(contract.get("selfRegistration"), "selfRegistration policy is required") if False else require_object(policy.get("selfRegistration"), "selfRegistration policy is required")
     require(
         self_registration.get("defaultEnabled") is False,
         "self-registration must remain disabled by default",
@@ -112,9 +108,7 @@ def validate_lifecycle_and_data_boundary(contract: dict[str, Any]) -> None:
     lifecycle = contract.get("humanAccountLifecycle")
     require(lifecycle == EXPECTED_LIFECYCLE, "human account lifecycle states drifted")
 
-    disablement = require_object(
-        contract.get("disablement"), "disablement policy is required"
-    )
+    disablement = require_object(contract.get("disablement"), "disablement policy is required")
     require(
         disablement.get("newAuthenticationDenied") is True,
         "disabled accounts must deny new authentication",
@@ -134,9 +128,7 @@ def validate_lifecycle_and_data_boundary(contract: dict[str, Any]) -> None:
 
 
 def validate_migration_boundary(contract: dict[str, Any]) -> None:
-    migration = require_object(
-        contract.get("migrationBoundary"), "migrationBoundary object is required"
-    )
+    migration = require_object(contract.get("migrationBoundary"), "migrationBoundary object is required")
     require(
         migration.get("inheritedRuntime") == "transitional_reference_only",
         "inherited runtime must remain transitional reference infrastructure",
