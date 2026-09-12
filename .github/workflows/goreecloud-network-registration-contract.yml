@@ -31,4 +31,4 @@ jobs:
       - name: Validate machine-readable registration contract
         run: python scripts/goreecloud/validate_network_application_registration.py
       - name: Test registration evidence boundary
-        run: python -m unittest discover -s tests/goreecloud -p 'test_*.py' -v
+        run: python tests/goreecloud/test_network_application_registration.py -v
