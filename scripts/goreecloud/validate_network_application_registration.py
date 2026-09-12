@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the GoreeCloud Network application-registration contract and minimized runtime evidence."""
+"""Validate the GoreeCloud Network registration contract and runtime evidence."""
 
 from __future__ import annotations
 
@@ -42,10 +42,7 @@ def _walk_keys(value: Any) -> list[str]:
     return keys
 
 
-def validate_contract(contract: dict[str, Any]) -> None:
-    if contract.get("schemaVersion") != SCHEMA_VERSION:
-        raise ContractError("unexpected contract schemaVersion")
-
+def _validate_application(contract: dict[str, Any]) -> None:
     application = contract.get("application")
     if not isinstance(application, dict):
         raise ContractError("application object is required")
@@ -62,12 +59,17 @@ def validate_contract(contract: dict[str, Any]) -> None:
         if application.get(key) != expected:
             raise ContractError(f"application.{key} must be {expected!r}")
 
+
+def _validate_issuer(contract: dict[str, Any]) -> None:
     issuer = contract.get("issuer")
-    if not isinstance(issuer, dict) or issuer.get("expected") != "https://identity.goreecloud.com/application/o/network/":
+    expected_issuer = "https://identity.goreecloud.com/application/o/network/"
+    if not isinstance(issuer, dict) or issuer.get("expected") != expected_issuer:
         raise ContractError("canonical Network issuer is required")
     if issuer.get("discoveryRequired") is not True:
         raise ContractError("issuer discovery must remain required")
 
+
+def _validate_server_client(contract: dict[str, Any]) -> None:
     server_client = contract.get("serverIntrospectionClient")
     if not isinstance(server_client, dict):
         raise ContractError("serverIntrospectionClient is required")
@@ -80,18 +82,33 @@ def validate_contract(contract: dict[str, Any]) -> None:
     if server_client.get("redirectUris") != []:
         raise ContractError("server introspection client must not declare redirect URIs")
 
-    interactive = contract.get("interactiveAdministration")
-    if not isinstance(interactive, dict) or interactive.get("state") != "not_implemented":
-        raise ContractError("interactive Network Identity administration must remain not_implemented until separately validated")
 
+def _validate_interactive_administration(contract: dict[str, Any]) -> None:
+    interactive = contract.get("interactiveAdministration")
+    if not isinstance(interactive, dict):
+        raise ContractError("interactiveAdministration object is required")
+    if interactive.get("state") != "not_implemented":
+        raise ContractError(
+            "interactive Network Identity administration must remain "
+            "not_implemented until separately validated"
+        )
+
+
+def _validate_runtime_acceptance(contract: dict[str, Any]) -> None:
     acceptance = contract.get("runtimeAcceptance")
     if not isinstance(acceptance, dict):
         raise ContractError("runtimeAcceptance object is required")
-    if acceptance.get("registrationState") != "contract_defined_runtime_registration_pending":
+    if acceptance.get("registrationState") != (
+        "contract_defined_runtime_registration_pending"
+    ):
         raise ContractError("runtime registration must remain pending in the source contract")
-    if acceptance.get("networkVerifierEvidenceVersion") != "goreecloud.network.identity.acceptance/v1":
+    if acceptance.get("networkVerifierEvidenceVersion") != (
+        "goreecloud.network.identity.acceptance/v1"
+    ):
         raise ContractError("Network verifier evidence version is inconsistent")
-    if acceptance.get("successfulProbeState") != "runtime_probe_passed_production_acceptance_pending":
+    if acceptance.get("successfulProbeState") != (
+        "runtime_probe_passed_production_acceptance_pending"
+    ):
         raise ContractError("successful runtime probe state is inconsistent")
     if acceptance.get("productionAccepted") is not False:
         raise ContractError("source contract must never claim production acceptance")
@@ -114,6 +131,8 @@ def validate_contract(contract: dict[str, Any]) -> None:
     if not required.issubset(set(required_checks)):
         raise ContractError("required runtime acceptance checks are incomplete")
 
+
+def _validate_secret_policy(contract: dict[str, Any]) -> None:
     secret_policy = contract.get("secretPolicy")
     if not isinstance(secret_policy, dict):
         raise ContractError("secretPolicy object is required")
@@ -123,7 +142,20 @@ def validate_contract(contract: dict[str, Any]) -> None:
         raise ContractError("observed evidence reusable-secret policy must remain false")
 
 
-def validate_observed(contract: dict[str, Any], observed: dict[str, Any]) -> dict[str, Any]:
+def validate_contract(contract: dict[str, Any]) -> None:
+    if contract.get("schemaVersion") != SCHEMA_VERSION:
+        raise ContractError("unexpected contract schemaVersion")
+    _validate_application(contract)
+    _validate_issuer(contract)
+    _validate_server_client(contract)
+    _validate_interactive_administration(contract)
+    _validate_runtime_acceptance(contract)
+    _validate_secret_policy(contract)
+
+
+def validate_observed(
+    contract: dict[str, Any], observed: dict[str, Any]
+) -> dict[str, Any]:
     validate_contract(contract)
 
     secret_policy = contract["secretPolicy"]
@@ -131,7 +163,10 @@ def validate_observed(contract: dict[str, Any], observed: dict[str, Any]) -> dic
     present = {key.lower() for key in _walk_keys(observed)}
     leaking = sorted(prohibited.intersection(present))
     if leaking:
-        raise ContractError(f"observed evidence contains prohibited reusable-secret fields: {', '.join(leaking)}")
+        names = ", ".join(leaking)
+        raise ContractError(
+            f"observed evidence contains prohibited reusable-secret fields: {names}"
+        )
 
     application = contract["application"]
     issuer = contract["issuer"]
@@ -144,14 +179,18 @@ def validate_observed(contract: dict[str, Any], observed: dict[str, Any]) -> dic
     }
     for key, expected_value in expected.items():
         if observed.get(key) != expected_value:
-            raise ContractError(f"observed {key} does not match the approved Network registration contract")
+            raise ContractError(
+                f"observed {key} does not match the approved Network registration contract"
+            )
 
     if observed.get("runtimeConfigured") is not True:
         raise ContractError("observed runtime must explicitly report runtimeConfigured=true")
     if observed.get("registrationPresent") is not True:
         raise ContractError("observed runtime must explicitly report registrationPresent=true")
     if observed.get("productionAccepted") is not False:
-        raise ContractError("observed registration evidence must not claim production acceptance")
+        raise ContractError(
+            "observed registration evidence must not claim production acceptance"
+        )
 
     return {
         "evidenceVersion": "goreecloud.identity.network-registration-observation/v1",
@@ -188,7 +227,12 @@ def main() -> int:
             observed = load_json(args.observed)
             evidence = validate_observed(contract, observed)
     except (OSError, json.JSONDecodeError, ContractError) as exc:
-        print(json.dumps({"state": "validation_failed", "productionAccepted": False, "detail": str(exc)}, indent=2))
+        failure = {
+            "state": "validation_failed",
+            "productionAccepted": False,
+            "detail": str(exc),
+        }
+        print(json.dumps(failure, indent=2))
         return 1
 
     print(json.dumps(evidence, indent=2, sort_keys=True))
