@@ -55,11 +55,18 @@ _KID_RE = re.compile(r"^[A-Za-z0-9._-]{8,128}$")
 _AUTH_CONTEXT_RE = re.compile(r"^[A-Za-z0-9._:/-]{1,200}$")
 
 
+def _canonical_string(value: object, *, name: str) -> str:
+    raw = str(value or "")
+    if not raw or raw != raw.strip():
+        raise ValueError(f"{name} must be a non-empty canonical string")
+    return raw
+
+
 def _validate_kid(kid: str) -> str:
-    normalized = str(kid or "").strip()
-    if not _KID_RE.fullmatch(normalized):
+    canonical = _canonical_string(kid, name="kid")
+    if not _KID_RE.fullmatch(canonical):
         raise ValueError("kid must be an opaque 8-128 character identifier")
-    return normalized
+    return canonical
 
 
 def _public_jwk(kid: str, public_key: rsa.RSAPublicKey) -> dict[str, object]:
@@ -123,18 +130,17 @@ class VerifiedWorkloadPrincipal:
     authentication_context: str
 
     def __post_init__(self) -> None:
-        service_id = str(self.service_id or "").strip()
+        service_id = _canonical_string(self.service_id, name="service_id")
         if not _SERVICE_ID_RE.fullmatch(service_id):
             raise ValueError(
                 "service_id must be a canonical lowercase GoreeCloud service identifier"
             )
 
         scopes = _normalize_scopes(self.allowed_scopes)
-        unknown = sorted(set(scopes) - _ALLOWED_SCOPES)
-        if unknown:
-            raise ValueError(f"unsupported Mesh scope(s): {', '.join(unknown)}")
 
-        authentication_context = str(self.authentication_context or "").strip()
+        authentication_context = _canonical_string(
+            self.authentication_context, name="authentication_context"
+        )
         if not _AUTH_CONTEXT_RE.fullmatch(authentication_context):
             raise ValueError(
                 "authentication_context must identify the verified workload authentication"
@@ -279,13 +285,10 @@ class MeshServiceTokenIssuer:
         """
 
         env = os.environ if environ is None else environ
-        active_kid = str(env.get(ACTIVE_KID_ENV, "")).strip()
-        active_file = str(env.get(ACTIVE_PRIVATE_KEY_FILE_ENV, "")).strip()
-        if not active_kid or not active_file:
-            raise ValueError(
-                f"{ACTIVE_KID_ENV} and {ACTIVE_PRIVATE_KEY_FILE_ENV} are required "
-                "for Mesh token issuance"
-            )
+        active_kid = _canonical_string(env.get(ACTIVE_KID_ENV, ""), name=ACTIVE_KID_ENV)
+        active_file = _canonical_string(
+            env.get(ACTIVE_PRIVATE_KEY_FILE_ENV, ""), name=ACTIVE_PRIVATE_KEY_FILE_ENV
+        )
 
         retained_raw = str(env.get(RETAINED_PUBLIC_KEY_FILES_ENV, "{}")).strip() or "{}"
         try:
@@ -295,11 +298,17 @@ class MeshServiceTokenIssuer:
                 f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of " "kid-to-file mappings"
             ) from exc
         if not isinstance(retained, dict) or not all(
-            isinstance(kid, str) and isinstance(path, str) and path.strip()
+            isinstance(kid, str)
+            and kid == kid.strip()
+            and kid
+            and isinstance(path, str)
+            and path == path.strip()
+            and path
             for kid, path in retained.items()
         ):
             raise ValueError(
-                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of " "kid-to-file mappings"
+                f"{RETAINED_PUBLIC_KEY_FILES_ENV} must be a JSON object of canonical "
+                "kid-to-file mappings"
             )
 
         return cls.from_key_files(
@@ -373,9 +382,9 @@ class MeshServiceTokenIssuer:
         expires_at = issued_at + timedelta(seconds=lifetime_seconds)
         if not_before_at >= expires_at:
             raise ValueError("Mesh service-token not_before must be before expiry")
-        token_id = str(jti or uuid4()).strip()
-        if not token_id or len(token_id) > MAX_TOKEN_ID_LENGTH:
-            raise ValueError("jti must be a non-empty opaque identifier")
+        token_id = str(jti or uuid4())
+        if not token_id or token_id != token_id.strip() or len(token_id) > MAX_TOKEN_ID_LENGTH:
+            raise ValueError("jti must be a non-empty canonical opaque identifier")
 
         claims = {
             "iss": ISSUER,
@@ -398,10 +407,11 @@ class MeshServiceTokenIssuer:
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(dict.fromkeys(str(scope).strip() for scope in scopes if str(scope).strip()))
-    if not normalized:
-        return ()
-    unknown = sorted(set(normalized) - _ALLOWED_SCOPES)
-    if unknown:
-        raise ValueError(f"unsupported Mesh scope(s): {', '.join(unknown)}")
-    return normalized
+    normalized: list[str] = []
+    for scope in scopes:
+        canonical = _canonical_string(scope, name="Mesh scope")
+        if canonical not in _ALLOWED_SCOPES:
+            raise ValueError(f"unsupported Mesh scope(s): {canonical}")
+        if canonical not in normalized:
+            normalized.append(canonical)
+    return tuple(normalized)
