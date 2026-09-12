@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate the native GoreeCloud Identity account-security source contract."""
+
 from __future__ import annotations
 
 import json
@@ -57,9 +58,7 @@ def require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
-def closed_object(
-    value: object, expected_keys: set[str], name: str
-) -> dict[str, Any]:
+def closed_object(value: object, expected_keys: set[str], name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ContractError(f"{name} object is required")
     require(set(value) == expected_keys, f"{name} fields must be closed and exact")
