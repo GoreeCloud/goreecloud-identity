@@ -1,0 +1,22 @@
+---
+name: GoreeCloud Black Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  black-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - name: Setup authentik env
+        uses: ./.github/actions/setup
+        with:
+          dependencies: python
+      - name: Show exact Black diff
+        run: uv run black --check --diff authentik/goreecloud/mesh_service_token.py
