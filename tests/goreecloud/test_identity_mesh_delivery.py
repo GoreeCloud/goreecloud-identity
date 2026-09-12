@@ -198,3 +198,40 @@ def test_delivery_requires_typed_replay_and_timezone_bound_acceptance(monkeypatc
     monkeypatch.setattr(request, "build_opener", lambda *handlers: FakeOpener(FakeResponse(naive_time)))
     with pytest.raises(MeshDeliveryError, match="timezone"):
         MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+
+def test_delivery_rejects_hidden_acceptance_fields(monkeypatch) -> None:
+    hidden_top_level = accepted_payload()
+    hidden_top_level["authorized"] = True
+    monkeypatch.setattr(
+        request,
+        "build_opener",
+        lambda *handlers: FakeOpener(FakeResponse(hidden_top_level)),
+    )
+    with pytest.raises(MeshDeliveryError, match="receipt shape is not closed"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+    hidden_envelope = accepted_payload()
+    hidden_envelope["envelope"] = {
+        "id": "identity-authentication-001",
+        "authority_transfer": True,
+    }
+    monkeypatch.setattr(
+        request,
+        "build_opener",
+        lambda *handlers: FakeOpener(FakeResponse(hidden_envelope)),
+    )
+    with pytest.raises(MeshDeliveryError, match="envelope shape is not closed"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
+
+
+def test_delivery_requires_canonical_utc_acceptance_time(monkeypatch) -> None:
+    equivalent_offset_time = accepted_payload()
+    equivalent_offset_time["accepted_at"] = "2026-08-29T07:01:00-05:00"
+    monkeypatch.setattr(
+        request,
+        "build_opener",
+        lambda *handlers: FakeOpener(FakeResponse(equivalent_offset_time)),
+    )
+    with pytest.raises(MeshDeliveryError, match="canonical UTC"):
+        MeshDeliveryClient("https://mesh.goreecloud.com").deliver(envelope(), bearer_token="token")
