@@ -15,8 +15,7 @@ func GetTLSConfig() *tls.Config {
 			tls.CurveP256,
 			tls.CurveP384,
 		},
-		PreferServerCipherSuites: true,
-		CipherSuites:             []uint16{},
+		CipherSuites: []uint16{},
 	}
 
 	excludedCiphers := []uint16{
