@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate the native GoreeCloud Identity account-model source contract."""
+
 from __future__ import annotations
 
 import json
