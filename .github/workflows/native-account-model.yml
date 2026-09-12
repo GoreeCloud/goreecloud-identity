@@ -4,17 +4,24 @@ on:
   pull_request:
     paths:
       - "contracts/native-account-model.v1.json"
+      - "contracts/native-account-security.v1.json"
       - "scripts/goreecloud/validate_native_account_model.py"
+      - "scripts/goreecloud/validate_native_account_security.py"
       - "docs/goreecloud/NATIVE-ACCOUNT-MODEL.md"
+      - "docs/goreecloud/NATIVE-ACCOUNT-SECURITY.md"
       - "FEATURE-ROADMAP.md"
       - ".github/workflows/native-account-model.yml"
   push:
     branches: [main]
     paths:
       - "contracts/native-account-model.v1.json"
+      - "contracts/native-account-security.v1.json"
       - "scripts/goreecloud/validate_native_account_model.py"
+      - "scripts/goreecloud/validate_native_account_security.py"
       - "docs/goreecloud/NATIVE-ACCOUNT-MODEL.md"
+      - "docs/goreecloud/NATIVE-ACCOUNT-SECURITY.md"
       - "FEATURE-ROADMAP.md"
+      - ".github/workflows/native-account-model.yml"
 
 permissions:
   contents: read
@@ -39,7 +46,14 @@ jobs:
           python-version: "3.14"
       - name: Validate native account model contract
         run: python3 scripts/goreecloud/validate_native_account_model.py
+      - name: Validate native account-security contract
+        run: python3 scripts/goreecloud/validate_native_account_security.py
       - name: Validate JSON syntax
-        run: python3 -m json.tool contracts/native-account-model.v1.json >/dev/null
-      - name: Compile validator
-        run: python3 -m py_compile scripts/goreecloud/validate_native_account_model.py
+        run: |
+          python3 -m json.tool contracts/native-account-model.v1.json >/dev/null
+          python3 -m json.tool contracts/native-account-security.v1.json >/dev/null
+      - name: Compile validators
+        run: >-
+          python3 -m py_compile
+          scripts/goreecloud/validate_native_account_model.py
+          scripts/goreecloud/validate_native_account_security.py
