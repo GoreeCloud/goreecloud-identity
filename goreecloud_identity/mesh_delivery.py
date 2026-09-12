@@ -8,7 +8,7 @@ it is never persisted, placed in the envelope, or returned in a receipt.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from urllib import error, parse, request
 
@@ -16,6 +16,8 @@ MAX_ENVELOPE_BYTES = 256 * 1024
 MAX_RESPONSE_BYTES = 64 * 1024
 MAX_BEARER_TOKEN_LENGTH = 8192
 MAX_EVIDENCE_ID_LENGTH = 240
+ACCEPTANCE_RECEIPT_FIELDS = {"envelope", "replayed", "accepted_at", "producer_service_id"}
+ACCEPTANCE_ENVELOPE_FIELDS = {"id"}
 
 
 class MeshDeliveryError(RuntimeError):
@@ -49,7 +51,10 @@ def _read_json_object(response, *, maximum: int) -> dict[str, object]:  # noqa: 
 
 
 def _receipt_time(value: object) -> str:
-    text = _canonical_text(value, name="accepted_at", maximum=80)
+    try:
+        text = _canonical_text(value, name="accepted_at", maximum=80)
+    except ValueError as exc:
+        raise MeshDeliveryError("Mesh delivery receipt accepted_at is invalid") from exc
     normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
     try:
         parsed = datetime.fromisoformat(normalized)
@@ -57,6 +62,9 @@ def _receipt_time(value: object) -> str:
         raise MeshDeliveryError("Mesh delivery receipt accepted_at is invalid") from exc
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise MeshDeliveryError("Mesh delivery receipt accepted_at must include timezone information")
+    canonical_utc = parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    if text != canonical_utc:
+        raise MeshDeliveryError("Mesh delivery receipt accepted_at must use canonical UTC")
     return text
 
 
@@ -162,9 +170,13 @@ class MeshDeliveryClient:
 
         if status not in {200, 201}:
             raise MeshDeliveryError("Mesh evidence delivery returned an invalid acceptance response")
+        if set(payload) != ACCEPTANCE_RECEIPT_FIELDS:
+            raise MeshDeliveryError("Mesh delivery receipt shape is not closed")
 
         delivered = payload.get("envelope")
-        if not isinstance(delivered, dict) or delivered.get("id") != evidence_id:
+        if not isinstance(delivered, dict) or set(delivered) != ACCEPTANCE_ENVELOPE_FIELDS:
+            raise MeshDeliveryError("Mesh delivery receipt envelope shape is not closed")
+        if delivered.get("id") != evidence_id:
             raise MeshDeliveryError("Mesh delivery receipt did not bind to the submitted evidence id")
         if payload.get("producer_service_id") != self.producer_service_id:
             raise MeshDeliveryError("Mesh delivery receipt did not bind to GoreeCloud Identity service identity")
