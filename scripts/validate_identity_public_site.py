@@ -97,10 +97,7 @@ if "Content is solid. Interaction is glazed." not in glaze:
     raise SystemExit("Identity Center Glaze UI 2.1 material rule is missing")
 if GLAZE_PROMOTION_REVISION not in glaze:
     raise SystemExit("Identity Center Glaze UI 2.1 promotion reference is missing")
-if (
-    "--glaze-touch-min:48px" not in glaze
-    or "--glaze-touch-assisted:56px" not in glaze
-):
+if "--glaze-touch-min:48px" not in glaze or "--glaze-touch-assisted:56px" not in glaze:
     raise SystemExit("Identity Center Glaze UI 2.1 touch floors are missing")
 if "--g-touch-assisted:56px" not in css:
     raise SystemExit("Identity Center Touch Assistance fallback is missing")
