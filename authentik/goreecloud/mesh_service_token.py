@@ -32,6 +32,7 @@ MAX_LIFETIME_SECONDS = 900
 MIN_RSA_KEY_SIZE_BITS = 2048
 MAX_TOKEN_ID_LENGTH = 200
 MAX_PRIVATE_KEY_FILE_BYTES = 64 * 1024
+MAX_PUBLIC_KEY_FILE_BYTES = 64 * 1024
 ACTIVE_KID_ENV = "GOREECLOUD_MESH_ACTIVE_KID"
 ACTIVE_PRIVATE_KEY_FILE_ENV = "GOREECLOUD_MESH_ACTIVE_PRIVATE_KEY_FILE"
 RETAINED_PUBLIC_KEY_FILES_ENV = "GOREECLOUD_MESH_RETAINED_PUBLIC_KEY_FILES_JSON"
@@ -121,6 +122,64 @@ def _read_private_key_file(path: str | os.PathLike[str]) -> bytes:
         os.close(fd)
 
 
+def _read_public_key_file(path: str | os.PathLike[str]) -> bytes:
+    """Read one bounded verification-key file without following mutable aliases."""
+
+    key_path = Path(path)
+    try:
+        path_info = key_path.lstat()
+    except OSError as exc:
+        raise ValueError(
+            "Mesh verification key file does not exist or is not accessible: " f"{key_path}"
+        ) from exc
+    if stat.S_ISLNK(path_info.st_mode):
+        raise ValueError("Mesh verification key file must not be a symbolic link")
+    if not stat.S_ISREG(path_info.st_mode):
+        raise ValueError("Mesh verification key file must be a regular file")
+    if stat.S_IMODE(path_info.st_mode) & 0o022:
+        raise ValueError(
+            "Mesh verification key file must not be writable by group or other users"
+        )
+    if path_info.st_size <= 0 or path_info.st_size > MAX_PUBLIC_KEY_FILE_BYTES:
+        raise ValueError(
+            f"Mesh verification key file must be between 1 and {MAX_PUBLIC_KEY_FILE_BYTES} bytes"
+        )
+
+    flags = os.O_RDONLY
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(key_path, flags)
+    except OSError as exc:
+        raise ValueError("Mesh verification key file could not be opened safely") from exc
+    try:
+        opened_info = os.fstat(fd)
+        if not stat.S_ISREG(opened_info.st_mode):
+            raise ValueError(
+                "Mesh verification key file must remain a regular file when opened"
+            )
+        if (opened_info.st_dev, opened_info.st_ino) != (
+            path_info.st_dev,
+            path_info.st_ino,
+        ):
+            raise ValueError("Mesh verification key file changed while being opened")
+        if stat.S_IMODE(opened_info.st_mode) & 0o022:
+            raise ValueError(
+                "Mesh verification key file permissions changed to an unsafe mode"
+            )
+        if opened_info.st_size <= 0 or opened_info.st_size > MAX_PUBLIC_KEY_FILE_BYTES:
+            raise ValueError(
+                "Mesh verification key file size changed outside the accepted bound"
+            )
+        with os.fdopen(fd, "rb", closefd=False) as handle:
+            body = handle.read(MAX_PUBLIC_KEY_FILE_BYTES + 1)
+        if not body or len(body) > MAX_PUBLIC_KEY_FILE_BYTES:
+            raise ValueError("Mesh verification key file contents exceed the accepted bound")
+        return body
+    finally:
+        os.close(fd)
+
+
 @dataclass(frozen=True, slots=True)
 class VerifiedWorkloadPrincipal:
     """Identity-authenticated workload allowed to receive Mesh credentials."""
@@ -173,13 +232,13 @@ class MeshVerificationKey:
         path: str | os.PathLike[str],
     ) -> MeshVerificationKey:
         key_path = Path(path)
-        if not key_path.is_file():
-            raise ValueError(
-                "Mesh verification key file does not exist or is not a file: " f"{key_path}"
-            )
         try:
-            loaded = serialization.load_pem_public_key(key_path.read_bytes())
+            loaded = serialization.load_pem_public_key(_read_public_key_file(key_path))
         except (OSError, TypeError, ValueError) as exc:
+            if isinstance(exc, ValueError) and str(exc).startswith(
+                "Mesh verification key file"
+            ):
+                raise
             raise ValueError(
                 "Mesh verification key file is not a valid PEM public key: " f"{key_path}"
             ) from exc
