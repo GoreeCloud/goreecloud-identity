@@ -285,10 +285,15 @@ class MeshServiceTokenIssuer:
         """
 
         env = os.environ if environ is None else environ
-        active_kid = _canonical_string(env.get(ACTIVE_KID_ENV, ""), name=ACTIVE_KID_ENV)
-        active_file = _canonical_string(
-            env.get(ACTIVE_PRIVATE_KEY_FILE_ENV, ""), name=ACTIVE_PRIVATE_KEY_FILE_ENV
-        )
+        active_kid_raw = str(env.get(ACTIVE_KID_ENV, ""))
+        active_file_raw = str(env.get(ACTIVE_PRIVATE_KEY_FILE_ENV, ""))
+        if not active_kid_raw.strip() or not active_file_raw.strip():
+            raise ValueError(
+                f"{ACTIVE_KID_ENV} and {ACTIVE_PRIVATE_KEY_FILE_ENV} are required "
+                "for Mesh token issuance"
+            )
+        active_kid = _canonical_string(active_kid_raw, name=ACTIVE_KID_ENV)
+        active_file = _canonical_string(active_file_raw, name=ACTIVE_PRIVATE_KEY_FILE_ENV)
 
         retained_raw = str(env.get(RETAINED_PUBLIC_KEY_FILES_ENV, "{}")).strip() or "{}"
         try:
