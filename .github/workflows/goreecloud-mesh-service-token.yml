@@ -7,6 +7,7 @@ on:
       - "authentik/goreecloud/**"
       - "tests/goreecloud/test_mesh_service_token.py"
       - "tests/goreecloud/test_mesh_service_token_canonical_identifiers.py"
+      - "tests/goreecloud/test_mesh_verification_key_file_safety.py"
       - "contracts/mesh-service-token.v1.json"
       - ".github/workflows/goreecloud-mesh-service-token.yml"
   pull_request:
@@ -14,6 +15,7 @@ on:
       - "authentik/goreecloud/**"
       - "tests/goreecloud/test_mesh_service_token.py"
       - "tests/goreecloud/test_mesh_service_token_canonical_identifiers.py"
+      - "tests/goreecloud/test_mesh_verification_key_file_safety.py"
       - "contracts/mesh-service-token.v1.json"
       - ".github/workflows/goreecloud-mesh-service-token.yml"
 
@@ -47,6 +49,7 @@ jobs:
           python -m pytest -q -c /dev/null
           tests/goreecloud/test_mesh_service_token.py
           tests/goreecloud/test_mesh_service_token_canonical_identifiers.py
+          tests/goreecloud/test_mesh_verification_key_file_safety.py
 
       - name: Validate token profile contract syntax
         run: python -m json.tool contracts/mesh-service-token.v1.json > /dev/null
