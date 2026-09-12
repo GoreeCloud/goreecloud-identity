@@ -1,6 +1,10 @@
 name: Platform Contract
 
 on:
+  pull_request:
+    paths:
+      - goreecloud.platform.yaml
+      - .github/workflows/platform-contract.yml
   push:
     branches:
       - main
