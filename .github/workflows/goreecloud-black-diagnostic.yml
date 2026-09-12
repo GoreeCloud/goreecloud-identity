@@ -7,16 +7,30 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  black-diff:
+  black-format:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Setup authentik env
         uses: ./.github/actions/setup
         with:
           dependencies: python
-      - name: Show exact Black diff
-        run: uv run black --check --diff authentik/goreecloud/mesh_service_token.py
+      - name: Format exact Identity token module
+        run: uv run black authentik/goreecloud/mesh_service_token.py
+      - name: Commit formatter-only result
+        run: |
+          if git diff --quiet -- authentik/goreecloud/mesh_service_token.py; then
+            echo "Target file already matches pinned Black formatting."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add authentik/goreecloud/mesh_service_token.py
+          git commit -m "style: format Identity Mesh token module"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
