@@ -52,6 +52,32 @@
     "applicationDisablementRequiresRevocationEvaluation": true,
     "runtimeAccepted": false
   },
+  "applicationAcceptanceProof": {
+    "purpose": "non_secret_consumer_acceptance_metadata",
+    "requiredMetadataFields": [
+      "principalId",
+      "audience",
+      "issuedAt",
+      "expiresAt"
+    ],
+    "exactStringFields": [
+      "principalId",
+      "audience"
+    ],
+    "registeredConsumerAudienceRequired": true,
+    "stringNormalizationAllowed": false,
+    "blankOrControlBearingIdentityAllowed": false,
+    "issuedAtMustPrecedeExpiresAt": true,
+    "futureIssuedProofAllowed": false,
+    "expiryExclusive": true,
+    "consumerMayRequireAdditionalExactOpaqueBindings": true,
+    "additionalBindingsExpandIdentityAuthority": false,
+    "credentialMaterialAllowed": false,
+    "proofAloneAuthenticatesPrincipal": false,
+    "proofAloneAuthorizesApplicationData": false,
+    "consumerIndependentAcceptanceRequired": true,
+    "runtimeAccepted": false
+  },
   "authorizationBoundary": {
     "identityAuthenticatesPrincipal": true,
     "identityIssuesDelegatedPlatformClaims": true,

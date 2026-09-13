@@ -5,10 +5,13 @@ on:
     paths:
       - "contracts/native-account-model.v1.json"
       - "contracts/native-account-security.v1.json"
+      - "contracts/native-application-session.v1.json"
       - "scripts/goreecloud/validate_native_account_model.py"
       - "scripts/goreecloud/validate_native_account_security.py"
+      - "scripts/goreecloud/validate_native_application_session.py"
       - "docs/goreecloud/NATIVE-ACCOUNT-MODEL.md"
       - "docs/goreecloud/NATIVE-ACCOUNT-SECURITY.md"
+      - "docs/goreecloud/NATIVE-APPLICATION-SESSIONS.md"
       - "FEATURE-ROADMAP.md"
       - ".github/workflows/native-account-model.yml"
   push:
@@ -16,10 +19,13 @@ on:
     paths:
       - "contracts/native-account-model.v1.json"
       - "contracts/native-account-security.v1.json"
+      - "contracts/native-application-session.v1.json"
       - "scripts/goreecloud/validate_native_account_model.py"
       - "scripts/goreecloud/validate_native_account_security.py"
+      - "scripts/goreecloud/validate_native_application_session.py"
       - "docs/goreecloud/NATIVE-ACCOUNT-MODEL.md"
       - "docs/goreecloud/NATIVE-ACCOUNT-SECURITY.md"
+      - "docs/goreecloud/NATIVE-APPLICATION-SESSIONS.md"
       - "FEATURE-ROADMAP.md"
       - ".github/workflows/native-account-model.yml"
 
@@ -48,12 +54,16 @@ jobs:
         run: python3 scripts/goreecloud/validate_native_account_model.py
       - name: Validate native account-security contract
         run: python3 scripts/goreecloud/validate_native_account_security.py
+      - name: Validate native application-session contract
+        run: python3 scripts/goreecloud/validate_native_application_session.py
       - name: Validate JSON syntax
         run: |
           python3 -m json.tool contracts/native-account-model.v1.json >/dev/null
           python3 -m json.tool contracts/native-account-security.v1.json >/dev/null
+          python3 -m json.tool contracts/native-application-session.v1.json >/dev/null
       - name: Compile validators
         run: >-
           python3 -m py_compile
           scripts/goreecloud/validate_native_account_model.py
           scripts/goreecloud/validate_native_account_security.py
+          scripts/goreecloud/validate_native_application_session.py

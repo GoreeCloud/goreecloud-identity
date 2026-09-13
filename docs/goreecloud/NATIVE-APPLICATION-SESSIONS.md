@@ -66,6 +66,33 @@ The client-instance identifier is required to be locally random. Hardware finger
 
 The user must ultimately be able to see and revoke individual native application sessions. Account disablement and application disablement must both trigger revocation evaluation.
 
+## Application acceptance proof
+
+The native-session contract now defines a common, non-secret acceptance-proof shape that consuming applications may validate before they consider an Identity-bound operation.
+
+The common proof metadata is:
+
+- `principalId` — the exact authenticated Identity principal expected by the consumer;
+- `audience` — the exact registered consumer audience;
+- `issuedAt` — the proof/session issue time;
+- `expiresAt` — the exclusive expiry time.
+
+The common acceptance rules are fail-closed:
+
+- principal and audience strings must already be canonical for the consuming contract; clients must not trim, case-fold, decode, coerce, or otherwise normalize them during acceptance;
+- blank, trim-dependent, or control-bearing principal/audience values are invalid;
+- the audience must match the registered consumer audience exactly;
+- `issuedAt` must be strictly earlier than `expiresAt`;
+- a proof with an issue time in the future is not acceptable;
+- expiry is exclusive, so a proof is expired when the acceptance time is equal to or later than `expiresAt`;
+- the proof metadata contains no credential material and is not itself a bearer credential;
+- the proof metadata alone does not authenticate a caller and does not authorize application data;
+- the consuming application must independently accept the proof and continue to enforce its own authorization.
+
+A consumer may require additional exact opaque bindings when its own authorization model needs them. For example, a Mail client may require an exact application-owned account identifier in addition to the Identity principal and audience. Such additional bindings narrow the operation; they do not expand Identity authority or transfer application authorization to Identity.
+
+This source contract does not register or activate any concrete Android/Linux audience. Consumer-side audience strings remain Development inputs until the corresponding Identity application registration exists and is independently accepted.
+
 ## Application authorization remains independent
 
 GoreeCloud Identity owns platform identity, authentication, sessions, credentials, application registration, and delegated platform claims.
@@ -147,15 +174,15 @@ The next implementation milestones are:
 
 1. implement the GoreeCloud-owned native application registration and authorization runtime;
 2. implement PKCE-bound authorization-code issuance/exchange with exact redirect validation;
-3. implement bounded access-token audience/scope validation and native session records;
+3. implement bounded access-token audience/scope validation, native session records, and production-derived application-acceptance proof metadata;
 4. implement refresh rotation, reuse detection, family revocation, and account/application revocation propagation;
 5. implement session/device visibility and individual revocation without secret disclosure;
 6. validate protected native credential storage patterns for Android and Linux clients;
-7. integrate one controlled first-party application without bypassing its application authorization;
+7. integrate one controlled first-party application that independently validates the canonical proof contract without bypassing its application authorization;
 8. complete exact-revision runtime, security, recovery, Wardveil, Privacy Shield, monitoring, rollback, and production acceptance.
 
 ## Acceptance boundary
 
 `contracts/native-application-session.v1.json` is source-contract evidence only.
 
-It does **not** establish native runtime implementation, deployed application registrations, production OAuth/OIDC migration, production signing keys, accepted Android/Linux client credentials, production session revocation, production audit retention, Release Candidate status, Stable status, or production approval.
+It does **not** establish native runtime implementation, deployed application registrations, production OAuth/OIDC migration, production signing keys, accepted Android/Linux client credentials, production application-acceptance proof issuance, production session revocation, production audit retention, Release Candidate status, Stable status, or production approval.

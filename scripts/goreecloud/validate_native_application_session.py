@@ -17,6 +17,13 @@ EXPECTED_AUDIT_EVENTS = [
     "native_application_refresh_rotated",
     "native_application_session_revoked",
 ]
+EXPECTED_ACCEPTANCE_PROOF_FIELDS = [
+    "principalId",
+    "audience",
+    "issuedAt",
+    "expiresAt",
+]
+EXPECTED_ACCEPTANCE_EXACT_STRING_FIELDS = ["principalId", "audience"]
 TOP_LEVEL_KEYS = {
     "schemaVersion",
     "lifecycle",
@@ -28,6 +35,7 @@ TOP_LEVEL_KEYS = {
     "applicationRegistration",
     "tokens",
     "sessionBinding",
+    "applicationAcceptanceProof",
     "authorizationBoundary",
     "storageAndTransport",
     "revocationAndOffline",
@@ -226,6 +234,64 @@ def validate_session_binding(contract: dict[str, Any]) -> None:
         name="sessionBinding",
     )
     require_contract_only(section, "sessionBinding")
+
+
+def validate_application_acceptance_proof(contract: dict[str, Any]) -> None:
+    section = closed_object(
+        contract.get("applicationAcceptanceProof"),
+        {
+            "purpose",
+            "requiredMetadataFields",
+            "exactStringFields",
+            "registeredConsumerAudienceRequired",
+            "stringNormalizationAllowed",
+            "blankOrControlBearingIdentityAllowed",
+            "issuedAtMustPrecedeExpiresAt",
+            "futureIssuedProofAllowed",
+            "expiryExclusive",
+            "consumerMayRequireAdditionalExactOpaqueBindings",
+            "additionalBindingsExpandIdentityAuthority",
+            "credentialMaterialAllowed",
+            "proofAloneAuthenticatesPrincipal",
+            "proofAloneAuthorizesApplicationData",
+            "consumerIndependentAcceptanceRequired",
+            "runtimeAccepted",
+        },
+        "applicationAcceptanceProof",
+    )
+    require(
+        section.get("purpose") == "non_secret_consumer_acceptance_metadata",
+        "application acceptance proof must remain non-secret metadata",
+    )
+    require(
+        section.get("requiredMetadataFields") == EXPECTED_ACCEPTANCE_PROOF_FIELDS,
+        "application acceptance proof required metadata fields drifted",
+    )
+    require(
+        section.get("exactStringFields") == EXPECTED_ACCEPTANCE_EXACT_STRING_FIELDS,
+        "application acceptance exact string fields drifted",
+    )
+    require_flags(
+        section,
+        required_true=(
+            "registeredConsumerAudienceRequired",
+            "issuedAtMustPrecedeExpiresAt",
+            "expiryExclusive",
+            "consumerMayRequireAdditionalExactOpaqueBindings",
+            "consumerIndependentAcceptanceRequired",
+        ),
+        required_false=(
+            "stringNormalizationAllowed",
+            "blankOrControlBearingIdentityAllowed",
+            "futureIssuedProofAllowed",
+            "additionalBindingsExpandIdentityAuthority",
+            "credentialMaterialAllowed",
+            "proofAloneAuthenticatesPrincipal",
+            "proofAloneAuthorizesApplicationData",
+        ),
+        name="applicationAcceptanceProof",
+    )
+    require_contract_only(section, "applicationAcceptanceProof")
 
 
 def validate_authorization_boundary(contract: dict[str, Any]) -> None:
@@ -446,6 +512,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
     validate_application_registration(contract)
     validate_tokens(contract)
     validate_session_binding(contract)
+    validate_application_acceptance_proof(contract)
     validate_authorization_boundary(contract)
     validate_storage_and_transport(contract)
     validate_revocation_and_offline(contract)
