@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 
 import jwt
 import pytest
@@ -17,6 +17,8 @@ from authentik.goreecloud.mesh_service_token import (
     MeshVerificationKey,
     VerifiedWorkloadPrincipal,
 )
+
+EXPECTED_TOKEN_LIFETIME_SECONDS = 300
 
 
 def signing_key(kid: str) -> MeshSigningKey:
@@ -61,7 +63,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     token = issuer.issue_for_principal(
         principal=principal("wardveil-security", "mesh.evidence.write"),
         requested_scopes=["mesh.evidence.write"],
-        lifetime_seconds=300,
+        lifetime_seconds=EXPECTED_TOKEN_LIFETIME_SECONDS,
         now=now,
         jti="wardveil-test-001",
     )
@@ -81,7 +83,7 @@ def test_issues_rs256_mesh_service_token_bound_to_verified_principal_and_scope()
     assert claims["sub"] == "service:wardveil-security"
     assert claims["service_id"] == "wardveil-security"
     assert claims["scope"] == "mesh.evidence.write"
-    assert claims["exp"] - claims["iat"] == 300
+    assert claims["exp"] - claims["iat"] == EXPECTED_TOKEN_LIFETIME_SECONDS
     assert claims["jti"] == "wardveil-test-001"
 
 
@@ -219,7 +221,12 @@ def test_rejects_unknown_principal_scope_excessive_lifetime_and_invalid_service_
 
 
 def test_rejects_weak_keys_duplicate_kids_and_naive_time() -> None:
-    weak = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    # Deliberately weak fixture: this negative test proves Identity rejects RSA keys
+    # below 2048 bits.
+    weak = rsa.generate_private_key(  # nosec B505
+        public_exponent=65537,
+        key_size=1024,
+    )
     with pytest.raises(ValueError, match="at least 2048 bits"):
         MeshSigningKey(kid="mesh-key-weak", private_key=weak)
 

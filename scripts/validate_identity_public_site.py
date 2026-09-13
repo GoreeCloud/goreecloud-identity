@@ -139,9 +139,7 @@ for marker in (
     "--g-touch:48px",
 ):
     if marker not in css:
-        raise SystemExit(
-            f"Identity Center accessibility/responsiveness marker missing: {marker}"
-        )
+        raise SystemExit(f"Identity Center accessibility/responsiveness marker missing: {marker}")
 
 build()
 for relative in REQUIRED:
