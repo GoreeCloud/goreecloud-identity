@@ -1,0 +1,95 @@
+name: GoreeCloud Direct Service Token
+
+on:
+  push:
+    paths:
+      - "goreecloud_identity/direct_service_token.py"
+      - "tests/goreecloud/test_direct_service_token.py"
+      - "contracts/direct-service-token.v1.json"
+      - ".github/workflows/goreecloud-direct-service-token.yml"
+  pull_request:
+    paths:
+      - "goreecloud_identity/direct_service_token.py"
+      - "tests/goreecloud/test_direct_service_token.py"
+      - "contracts/direct-service-token.v1.json"
+      - ".github/workflows/goreecloud-direct-service-token.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: goreecloud-direct-service-token-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install isolated direct-service test dependencies
+        run: python -m pip install --disable-pip-version-check "cryptography==50.0.0" "PyJWT==2.13.0" "pytest==9.1.1"
+
+      - name: Validate native direct-service token authority
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: python -m pytest -q -c /dev/null tests/goreecloud/test_direct_service_token.py
+
+      - name: Validate direct-service profile contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          from goreecloud_identity.direct_service_token import (
+              PRIVACY_SHIELD_AUDIENCE,
+              PRIVACY_SHIELD_CONSUME_SCOPE,
+              PRIVACY_SHIELD_VERIFY_SCOPE,
+              TOKEN_PROFILE,
+          )
+
+          profile = json.loads(Path("contracts/direct-service-token.v1.json").read_text())
+          runtime = profile["runtime_implementation"]
+          signing = profile["signing"]
+          lifetime = profile["lifetime"]
+          privacy = profile["audience_profiles"][PRIVACY_SHIELD_AUDIENCE]
+          mesh = profile["mesh_isolation"]
+
+          assert profile["schema_version"] == "1.0.0"
+          assert profile["token_profile"] == TOKEN_PROFILE
+          assert profile["issuer"] == "goreecloud-identity"
+          assert profile["lifecycle"] == "development"
+          assert runtime["issuer_module"] == "goreecloud_identity/direct_service_token.py"
+          assert runtime["verifier_module"] == "goreecloud_identity/direct_service_token.py"
+          assert runtime["issuer_implemented"] is True
+          assert runtime["verifier_implemented"] is True
+          assert runtime["durable_private_key_storage_integrated"] is False
+          assert runtime["jwks_endpoint_deployed"] is False
+          assert runtime["live_service_issuance_deployed"] is False
+          assert runtime["production_transport_deployed"] is False
+          assert signing["algorithms"] == ["RS256"]
+          assert signing["minimum_rsa_key_bits"] == 2048
+          assert lifetime["default_seconds"] == 300
+          assert lifetime["maximum_seconds"] == 900
+          assert lifetime["clock_skew_seconds"] == 60
+          assert privacy["allowed_service_ids"] == ["goreecloud-search"]
+          assert set(privacy["allowed_scopes"]) == {
+              PRIVACY_SHIELD_VERIFY_SCOPE,
+              PRIVACY_SHIELD_CONSUME_SCOPE,
+          }
+          assert privacy["authenticated_consumer_id_source"] == "verified service_id claim"
+          assert privacy["privacy_shield_binding"]["request_body_consumer_id_may_authenticate"] is False
+          assert mesh["mesh_audience"] == "goreecloud-mesh"
+          assert mesh["direct_service_token_valid_for_mesh"] is False
+          assert mesh["mesh_service_token_valid_for_direct_service_audiences"] is False
+          assert profile["production_acceptance"] is False
+          PY
