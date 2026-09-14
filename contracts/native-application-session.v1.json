@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "goreecloud.identity.native-application-session/v1",
+  "lifecycle": "development",
+  "canonicalAuthority": "GoreeCloud Identity",
+  "architecture": "goreecloud-owned-native",
+  "runtimeImplementationState": "contract_only",
+  "productionAccepted": false,
+  "protocolProfile": {
+    "preferredFlow": "oidc_oauth_authorization_code_pkce",
+    "authorizationCodeRequired": true,
+    "pkceS256Required": true,
+    "externalUserAgentRequired": true,
+    "stateRequired": true,
+    "nonceRequiredForOidc": true,
+    "implicitGrantAllowed": false,
+    "resourceOwnerPasswordGrantAllowed": false,
+    "nativeClientSecretRequired": false,
+    "runtimeAccepted": false
+  },
+  "applicationRegistration": {
+    "publicNativeClientClassRequired": true,
+    "exactClientIdRequired": true,
+    "exactRegisteredRedirectRequired": true,
+    "wildcardRedirectAllowed": false,
+    "httpsRequiredOutsideExplicitLoopbackDevelopment": true,
+    "redirectUserinfoAllowed": false,
+    "redirectFragmentAllowed": false,
+    "applicationWideReusableCredentialAllowed": false,
+    "runtimeAccepted": false
+  },
+  "tokens": {
+    "shortLivedAccessTokenRequired": true,
+    "audienceBindingRequired": true,
+    "scopeBindingRequired": true,
+    "idTokenAsApiBearerAllowed": false,
+    "refreshTokenRotationRequired": true,
+    "refreshTokenReuseDetectionRequired": true,
+    "refreshTokenFamilyRevocationRequired": true,
+    "refreshTokenDisclosureInLogsAllowed": false,
+    "refreshTokenDisclosureInOrdinaryDocsAllowed": false,
+    "runtimeAccepted": false
+  },
+  "sessionBinding": {
+    "userBindingRequired": true,
+    "applicationBindingRequired": true,
+    "clientInstanceBindingRequired": true,
+    "clientInstanceIdentifierLocalRandomRequired": true,
+    "hardwareFingerprintingAllowed": false,
+    "deviceSessionVisibilityRequired": true,
+    "perSessionRevocationRequired": true,
+    "accountDisablementRequiresRevocationEvaluation": true,
+    "applicationDisablementRequiresRevocationEvaluation": true,
+    "runtimeAccepted": false
+  },
+  "applicationAcceptanceProof": {
+    "purpose": "non_secret_consumer_acceptance_metadata",
+    "requiredMetadataFields": [
+      "principalId",
+      "audience",
+      "issuedAt",
+      "expiresAt"
+    ],
+    "exactStringFields": [
+      "principalId",
+      "audience"
+    ],
+    "registeredConsumerAudienceRequired": true,
+    "stringNormalizationAllowed": false,
+    "blankOrControlBearingIdentityAllowed": false,
+    "issuedAtMustPrecedeExpiresAt": true,
+    "futureIssuedProofAllowed": false,
+    "expiryExclusive": true,
+    "consumerMayRequireAdditionalExactOpaqueBindings": true,
+    "additionalBindingsExpandIdentityAuthority": false,
+    "credentialMaterialAllowed": false,
+    "proofAloneAuthenticatesPrincipal": false,
+    "proofAloneAuthorizesApplicationData": false,
+    "consumerIndependentAcceptanceRequired": true,
+    "runtimeAccepted": false
+  },
+  "authorizationBoundary": {
+    "identityAuthenticatesPrincipal": true,
+    "identityIssuesDelegatedPlatformClaims": true,
+    "applicationAuthorizationPreserved": true,
+    "applicationDataOwnershipPreserved": true,
+    "applicationMayExpandBeyondIssuedScope": false,
+    "identitySessionImpliesApplicationMutationPermission": false,
+    "runtimeAccepted": false
+  },
+  "storageAndTransport": {
+    "tlsRequiredOutsideExplicitLoopbackDevelopment": true,
+    "userPasswordStorageInNativeClientAllowed": false,
+    "browserSessionCookieReuseAsNativeCredentialAllowed": false,
+    "sourceControlledReusableCredentialsAllowed": false,
+    "ordinaryDocumentationReusableCredentialsAllowed": false,
+    "authenticationLogReusableCredentialsAllowed": false,
+    "protectedPlatformCredentialStorageRequired": true,
+    "runtimeAccepted": false
+  },
+  "revocationAndOffline": {
+    "expiredCredentialFallbackAllowed": false,
+    "offlineMutationAuthorizationImpliedByCachedIdentityState": false,
+    "serverMutationRequiresCurrentCredentialValidation": true,
+    "revokedSessionMayRefresh": false,
+    "revocationPropagationRequired": true,
+    "runtimeAccepted": false
+  },
+  "audit": {
+    "requiredEvents": [
+      "native_application_authorization_started",
+      "native_application_authorization_succeeded",
+      "native_application_authorization_failed",
+      "native_application_session_created",
+      "native_application_refresh_rotated",
+      "native_application_session_revoked"
+    ],
+    "passwordsAllowed": false,
+    "authorizationCodesAllowed": false,
+    "accessTokensAllowed": false,
+    "refreshTokensAllowed": false,
+    "runtimeAccepted": false
+  },
+  "consumerRequirements": {
+    "identityIssuedCredentialRequired": true,
+    "serviceTokenSubstitutionAllowed": false,
+    "sharedApplicationPasswordAllowed": false,
+    "directIdentityDatabaseAccessAllowed": false,
+    "directApplicationDatabaseAuthorizationBypassAllowed": false,
+    "clientMaySelectAnotherUserAsPrincipal": false
+  },
+  "migrationBoundary": {
+    "inheritedAuthentikProtocolSupportIsNativeAcceptance": false,
+    "inheritedRuntime": "transitional_reference_only",
+    "nativeRuntimeImplementationRequired": true,
+    "existingApplicationSessionMigrationMustBeExplicit": true,
+    "applicationOwnedAuthorizationPreserved": true,
+    "applicationOwnedDataPreserved": true
+  },
+  "authorityTransfer": false
+}

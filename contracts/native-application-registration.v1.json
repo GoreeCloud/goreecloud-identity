@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "goreecloud.identity.native-application-registration/v1",
+  "lifecycle": "development",
+  "canonicalAuthority": "GoreeCloud Identity",
+  "runtimeImplementationState": "contract_only",
+  "productionAccepted": false,
+  "registrationRecord": {
+    "requiredFields": [
+      "applicationId",
+      "clientId",
+      "audience",
+      "redirectUris",
+      "allowedScopes",
+      "enabled"
+    ],
+    "exactStringFields": [
+      "applicationId",
+      "clientId",
+      "audience"
+    ],
+    "stringNormalizationAllowed": false,
+    "blankOrControlBearingIdentifiersAllowed": false,
+    "publicNativeClientRequired": true,
+    "embeddedClientSecretAllowed": false,
+    "oneRegistrationPerApplicationAudienceRequired": true,
+    "runtimeAccepted": false
+  },
+  "redirectPolicy": {
+    "exactRegistrationRequired": true,
+    "wildcardRedirectAllowed": false,
+    "userinfoAllowed": false,
+    "fragmentAllowed": false,
+    "httpsRequiredOutsideExplicitLoopbackDevelopment": true,
+    "loopbackDevelopmentMustBeExplicit": true,
+    "runtimeAccepted": false
+  },
+  "audienceAndScopePolicy": {
+    "exactAudienceRequired": true,
+    "audienceReuseAcrossUnrelatedApplicationsAllowed": false,
+    "explicitAllowedScopesRequired": true,
+    "wildcardScopeAllowed": false,
+    "clientMayExpandBeyondRegisteredScopes": false,
+    "runtimeAccepted": false
+  },
+  "lifecyclePolicy": {
+    "disabledRegistrationMayAuthorize": false,
+    "applicationDisablementRequiresSessionRevocationEvaluation": true,
+    "registrationChangeRequiresSessionReevaluation": true,
+    "silentAudienceReassignmentAllowed": false,
+    "silentClientIdReassignmentAllowed": false,
+    "runtimeAccepted": false
+  },
+  "consumerBoundary": {
+    "consumerMaySelfRegisterAtRuntime": false,
+    "consumerMayChooseAnotherApplicationsAudience": false,
+    "consumerMayChooseAnotherApplicationsClientId": false,
+    "consumerMayOverrideRegisteredRedirect": false,
+    "registrationImpliesApplicationDataAuthorization": false,
+    "registrationImpliesPrivacyShieldAuthorization": false,
+    "registrationImpliesWardveilAcceptance": false
+  },
+  "registrations": [],
+  "emptyRegistryMeansNoRuntimeRegistrations": true,
+  "authorityTransfer": false
+}
