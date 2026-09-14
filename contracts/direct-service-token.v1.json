@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0.0",
+  "token_profile": "goreecloud-identity.direct-service-token.v1",
+  "issuer": "goreecloud-identity",
+  "lifecycle": "development",
+  "runtime_implementation": {
+    "issuer_module": "goreecloud_identity/direct_service_token.py",
+    "verifier_module": "goreecloud_identity/direct_service_token.py",
+    "issuer_implemented": true,
+    "verifier_implemented": true,
+    "durable_private_key_storage_integrated": false,
+    "jwks_endpoint_deployed": false,
+    "live_service_issuance_deployed": false,
+    "production_transport_deployed": false
+  },
+  "signing": {
+    "algorithms": ["RS256"],
+    "minimum_rsa_key_bits": 2048,
+    "rsa_public_exponent": "odd integer greater than or equal to 3",
+    "kid_required": true,
+    "kid_pattern": "^[A-Za-z0-9._-]{8,128}$",
+    "verification_keys": "JWKS",
+    "jwks_media_type": "application/json",
+    "protected_header": {
+      "alg": "RS256",
+      "typ": "JWT",
+      "kid_required": true,
+      "critical_headers_allowed": false,
+      "token_selected_or_embedded_key_sources_allowed": false,
+      "rejected_key_source_headers": ["jku", "jwk", "x5u", "x5c"]
+    }
+  },
+  "claims": {
+    "iss": "goreecloud-identity",
+    "aud": "exact approved target service audience",
+    "sub": "service:<service_id>",
+    "service_id": "canonical GoreeCloud service identifier",
+    "scope": "space-delimited authorization scopes",
+    "iat": "NumericDate required",
+    "nbf": "NumericDate required",
+    "exp": "NumericDate required",
+    "jti": "opaque unique token identifier required"
+  },
+  "lifetime": {
+    "default_seconds": 300,
+    "maximum_seconds": 900,
+    "clock_skew_seconds": 60,
+    "refresh_model": "issue a new short-lived service credential; do not extend an existing token"
+  },
+  "audience_profiles": {
+    "goreecloud-privacy-shield": {
+      "allowed_service_ids": ["goreecloud-search"],
+      "allowed_scopes": [
+        "privacy.capability-reference.verify",
+        "privacy.capability-reference.consume"
+      ],
+      "authenticated_consumer_id_source": "verified service_id claim",
+      "privacy_shield_binding": {
+        "consumer_id_must_equal_authenticated_service_id": true,
+        "request_body_consumer_id_may_authenticate": false,
+        "network_location_may_authenticate": false,
+        "mesh_membership_may_authenticate": false,
+        "consume_true_requires_scope": "privacy.capability-reference.consume",
+        "consume_false_requires_scope": "privacy.capability-reference.verify"
+      }
+    }
+  },
+  "mesh_isolation": {
+    "mesh_audience": "goreecloud-mesh",
+    "direct_service_token_valid_for_mesh": false,
+    "mesh_service_token_valid_for_direct_service_audiences": false,
+    "audience_rewrite_allowed": false
+  },
+  "security_requirements": [
+    "private signing keys never leave GoreeCloud Identity",
+    "caller-selected arbitrary audiences are prohibited",
+    "caller-selected arbitrary service identities are prohibited",
+    "each token audience must be explicitly registered in this contract",
+    "each service id must be explicitly approved for the target audience",
+    "requested scopes must be a subset of both Identity-authenticated principal grants and the target audience policy",
+    "consumers must validate signature, protected-header profile, issuer, exact audience, expiry, not-before, service identity, required scope, kid profile, RSA key strength, and RSA public exponent",
+    "tokens must not contain user content, prompts, Privacy Shield capability references, signed Privacy Shield capabilities, application data, session secrets, reusable passwords, or private key material",
+    "direct-service authentication does not itself create Privacy Shield authorization for an end-user data operation",
+    "the authenticated direct-service identity may only supply the service consumer identity required by the target service",
+    "unknown kid, unsupported audience, unapproved service id, unsupported scope, malformed claim, invalid temporal claim, or invalid key material must fail closed"
+  ],
+  "privacy_shield_search_boundary": {
+    "consumer_service": "goreecloud-search",
+    "target_service": "goreecloud-privacy-shield",
+    "purpose": "authenticate GoreeCloud Search as the service caller of the Privacy Shield capability-reference verification boundary",
+    "does_not_authenticate_end_user_requester": true,
+    "does_not_replace_privacy_capability_reference": true,
+    "does_not_authorize_search_query": true,
+    "search_requester_identity_remains_separate": true,
+    "privacy_shield_capability_verification_remains_separate": true
+  },
+  "deployment_boundary": "The native direct-service issuer and verifier are source implemented for the bounded GoreeCloud Search to Privacy Shield service-authentication profile. This does not create a deployed Identity issuer, JWKS endpoint, Privacy Shield authentication middleware, network transport, production signing-key custody, production requester authentication, or production acceptance.",
+  "production_acceptance": false
+}
