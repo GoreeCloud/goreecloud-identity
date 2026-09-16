@@ -37,10 +37,7 @@ IMPORT_TARGET_RE = re.compile(
 
 if LOCK.get("schema") != "goreecloud.glaze.consumer-lock.v1":
     raise SystemExit("unsupported Glaze consumer lock schema")
-if (
-    LOCK.get("version") != "1.1.0"
-    or LOCK.get("lifecycle") != "Historical Stable Baseline"
-):
+if LOCK.get("version") != "1.1.0" or LOCK.get("lifecycle") != "Historical Stable Baseline":
     raise SystemExit(
         "Identity Center must preserve its historical GLAZE UI V1.1 / "
         "1.1.0 presentation baseline"
