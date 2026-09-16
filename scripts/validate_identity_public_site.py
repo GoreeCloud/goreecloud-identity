@@ -23,14 +23,16 @@ SOURCE_FILES = (
 APPROVED_ICON_GIT_BLOB_SHA = "dc8287e385f86767f0105c48a8f234d8440d7623"
 PUBLIC_HOST = "id.goreecloud.com"
 PUBLIC_ORIGIN = f"https://{PUBLIC_HOST}"
-GLAZE_STABLE_COMMIT = "15cc76d2bcd4065552dc31c77145b63f34d9e7b2"
+GLAZE_BASELINE_COMMIT = "15cc76d2bcd4065552dc31c77145b63f34d9e7b2"
+GLAZE_SOURCE_COMMIT = "b7fa8164bfdeaa1dc0acb21b770e7601120da04e"
+CURRENT_GLAZE_STABLE_VERSION = "1.5.0"
 EXPECTED_GLAZE_FILES = {
     "glaze-v1.1.0.css": "c689e8e58cefc49f931862996a1e0e871497fe88",
     "glaze-v1.0.0.css": "eca2209c5d678830f92907b4d44ea6cc5b1c8536",
     "glaze-v1.1.css": "aa0250f01151f17cd3c77e9a67544c6af4b5aa32",
     "glaze-v1.1-appearance.css": "c4e10e043d537c68f1e4a5f97bdb8b6f0d371dce",
     "glaze-v1.foundation.css": "b01051203831ce011c08f37b79f2e2032d34d0c8",
-    "glaze-v1.components.css": "f74d5d4a4dd3ae22354812260e06a042d3928507",
+    "glaze-v1.components.css": "c170fa89411766de8e1b17d59bc4b561fb51b838",
     "glaze-v1.components.adaptive.css": "e174ea4923ec1ac6e1eb52d7ee33c14f2f77d5ca",
     "glaze-v1.components.runtime.css": "a89356172d74b66c62cfda198ae827fe9b71c520",
     "glaze-v1.structure.css": "9781c3e162edbac9fce67b93fd3287fdacbcd504",
@@ -71,14 +73,17 @@ lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
 expected_lock = {
     "schema": "goreecloud.glaze.consumer-lock.v1",
     "version": "1.1.0",
-    "lifecycle": "Stable",
+    "lifecycle": "Historical Stable Baseline",
     "repository": "GoreeCloud/goreecloud-glaze-ui",
     "tag": "v1.1.0",
-    "stable_commit": GLAZE_STABLE_COMMIT,
+    "stable_commit": GLAZE_BASELINE_COMMIT,
+    "source_commit": GLAZE_SOURCE_COMMIT,
+    "current_stable_version": CURRENT_GLAZE_STABLE_VERSION,
+    "source_note": "Identity Center preserves the historical V1.1 / 1.1.0 presentation baseline while sourcing its locked V1 CSS graph from the exact GLAZE UI V1.5.0 Stable integration revision, which carries the canonical V1 import-closure repair. This does not establish Identity migration to V1.5.0.",
     "files": EXPECTED_GLAZE_FILES,
 }
 if lock != expected_lock:
-    raise SystemExit("Identity Center GLAZE UI V1.1 / 1.1.0 Stable consumer lock drifted")
+    raise SystemExit("Identity Center GLAZE UI historical consumer lock drifted")
 
 html = (SITE / "index.html").read_text(encoding="utf-8")
 css = (SITE / "style.css").read_text(encoding="utf-8")
@@ -237,6 +242,9 @@ for obsolete in (
         raise SystemExit(f"obsolete Glaze asset leaked into artifact: {obsolete.name}")
 
 print(
-    "Identity Center public website validation passed with "
-    f"GLAZE UI V1.1 / 1.1.0 Stable at {GLAZE_STABLE_COMMIT}"
+    "Identity Center public website validation passed with historical "
+    f"GLAZE UI V1.1 / 1.1.0 presentation semantics sourced from repaired "
+    f"current-Stable revision {GLAZE_SOURCE_COMMIT}; current Stable "
+    f"GLAZE UI remains {CURRENT_GLAZE_STABLE_VERSION} and Identity migration "
+    "remains independently required"
 )
