@@ -127,8 +127,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
         "registration required fields drifted",
     )
     require(
-        record.get("exactStringFields")
-        == ["applicationId", "clientId", "audience"],
+        record.get("exactStringFields") == ["applicationId", "clientId", "audience"],
         "registration exact string fields drifted",
     )
     require_flags(
