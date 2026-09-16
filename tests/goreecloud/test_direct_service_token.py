@@ -85,7 +85,7 @@ def test_direct_service_profile_cannot_be_reused_as_mesh_audience() -> None:
         )
 
 
-def test_only_explicitly_approved_service_identity_can_receive_privacy_shield_token() -> None:
+def test_only_approved_service_identity_can_receive_privacy_shield_token() -> None:
     with pytest.raises(PermissionError, match="not approved"):
         VerifiedDirectServicePrincipal(
             service_id="goreecloud-browser",
