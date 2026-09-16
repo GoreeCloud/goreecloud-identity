@@ -79,7 +79,12 @@ expected_lock = {
     "stable_commit": GLAZE_BASELINE_COMMIT,
     "source_commit": GLAZE_SOURCE_COMMIT,
     "current_stable_version": CURRENT_GLAZE_STABLE_VERSION,
-    "source_note": "Identity Center preserves the historical V1.1 / 1.1.0 presentation baseline while sourcing its locked V1 CSS graph from the exact GLAZE UI V1.5.0 Stable integration revision, which carries the canonical V1 import-closure repair. This does not establish Identity migration to V1.5.0.",
+    "source_note": (
+        "Identity Center preserves the historical V1.1 / 1.1.0 presentation "
+        "baseline while sourcing its locked V1 CSS graph from the exact GLAZE UI "
+        "V1.5.0 Stable integration revision, which carries the canonical V1 "
+        "import-closure repair. This does not establish Identity migration to V1.5.0."
+    ),
     "files": EXPECTED_GLAZE_FILES,
 }
 if lock != expected_lock:
