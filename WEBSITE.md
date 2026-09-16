@@ -16,19 +16,25 @@ The Cloudflare project and DNS/custom-domain binding are deployment operations s
 
 ## GLAZE UI contract
 
-The current governed consumer baseline remains **GLAZE UI V1.1 / 1.1.0**, tag `v1.1.0`, at immutable release revision `15cc76d2bcd4065552dc31c77145b63f34d9e7b2`.
+Identity Center's **implemented presentation baseline remains historical GLAZE UI V1.1 / 1.1.0**. The original immutable V1.1 Stable release identity is tag `v1.1.0` at revision `15cc76d2bcd4065552dc31c77145b63f34d9e7b2`.
 
-The published V1.1 entrypoint is `css/glaze-v1.1.0.css`. Identity Center pins that release identity and all thirteen expected CSS Git blobs in `identity-center-site/glaze.lock.json` instead of following a mutable design-system branch or requiring a runtime UI CDN.
+That original immutable release has a known CSS dependency defect: `glaze-v1.components.css` imports `./glaze-v1.candidate.css`, but that file is not part of the accepted V1.1 release graph. GoreeCloud later repaired that inherited V1 import closure canonically in the Glaze repository rather than rewriting the immutable V1.1 tag.
 
-The immutable `v1.1.0` source graph currently has a known dependency defect: `glaze-v1.components.css` imports `./glaze-v1.candidate.css`, but that file is not part of the accepted release graph. A byte-perfect lock therefore does **not** establish a complete browser dependency graph.
+Current Glaze lifecycle authority is **GLAZE UI V1.5 / 1.5.0 Stable**. Identity Center therefore sources its locked historical V1 CSS graph from exact V1.5.0 Stable integration revision `b7fa8164bfdeaa1dc0acb21b770e7601120da04e`, where the canonical V1 import-closure repair is present. The historical V1.1 release identity remains recorded separately for provenance.
 
-Identity Center must fail closed on that condition. `scripts/build_identity_public_site.py` resolves every locked asset, verifies each Git blob, validates every local CSS `@import` against the complete locked set, and only then may replace `dist`. The current `v1.1.0` graph is consequently expected to fail the publication gate before a new artifact is written.
+This distinction is deliberate:
 
-Canonical GLAZE UI repair work may prepare a corrected candidate, but Identity Center must not locally recreate the missing Candidate file, silently patch the immutable `v1.1.0` release, or treat an unreleased correction as Stable. A corrected immutable Stable Glaze release must be published and Identity must be explicitly re-pinned and revalidated before current Glaze conformance or website publication acceptance can be claimed.
+- Identity Center is **not** relabeled as a V1.5.0 consumer merely because its historical V1 assets are sourced from a later Stable repository revision.
+- The site still declares and renders its existing V1.1 / 1.1.0 presentation semantics.
+- `identity-center-site/glaze.lock.json` records both the immutable historical V1.1 release revision and the exact repaired source revision used to build the closed asset graph.
+- Every copied CSS file remains Git-blob pinned. The only historical V1 asset whose bytes differ from the original V1.1 release is the canonically repaired `glaze-v1.components.css` dependency layer.
+- Migration to current Stable GLAZE UI V1.5 / 1.5.0 remains separate product work requiring repository-local source, rendered, accessibility, representative-target, rollback, release, and production acceptance.
+
+The published historical V1.1 entrypoint remains `css/glaze-v1.1.0.css`. Identity Center validates every locked asset, every Git blob identity, and complete local CSS `@import` closure before replacing `dist`. It does not recreate the missing Candidate file, mutate the immutable V1.1 tag, consume an unreleased repair, or treat source compatibility as current-Stable consumer acceptance.
 
 The site follows the material rule **Content is solid. Interaction is glazed.** Durable identity, authority, policy, scope, and acceptance content remains on solid surfaces. Navigation, appropriate controls, and the bounded hero overview may use controlled Glaze material.
 
-The public surface is designed for the 48px general interaction floor, 56px Touch Assistance floor, density and clarity semantics, large-text compatibility, reduced-motion and reduced-transparency handling, increased/forced-contrast resilience, safe-area behavior, and deliberate responsive navigation across desktop, tablet, and mobile. Those source properties remain subject to fresh rendered and accessibility acceptance after a valid immutable design-system graph is available.
+The public surface is designed for the 48px general interaction floor, 56px Touch Assistance floor, density and clarity semantics, large-text compatibility, reduced-motion and reduced-transparency handling, increased/forced-contrast resilience, safe-area behavior, and deliberate responsive navigation across desktop, tablet, and mobile. Those source properties remain subject to fresh rendered and accessibility acceptance for any current-Stable migration.
 
 GLAZE UI controls presentation only. It does not establish production Identity acceptance, authentication correctness, authorization authority, credential custody, recovery readiness, or application migration.
 
@@ -36,12 +42,12 @@ GLAZE UI controls presentation only. It does not establish production Identity a
 
 - `identity-center-site/` — reviewed standalone public source, deliberately isolated from the inherited authentik `website/` Docusaurus workspace
 - `identity-center-site/assets/identity.svg` — byte-identical consumer derivative of `products/identity/app-icon.svg` from `GoreeCloud/goreecloud-branding-assets`
-- `identity-center-site/glaze.lock.json` — immutable GLAZE UI V1.1 consumer lock, including release identity and exact Git blob identities
+- `identity-center-site/glaze.lock.json` — exact historical V1.1 presentation lock plus current-Stable repaired source provenance and exact Git blob identities
 - `scripts/build_identity_public_site.py` — validates the complete locked GLAZE UI CSS dependency graph before creating the isolated `dist/` artifact
-- `scripts/validate_identity_public_site.py` — validates branding provenance, GLAZE UI release/blob identity, security headers, truth boundaries, responsive/accessibility behavior, and artifact identity when the build dependency gate is satisfiable
-- `.github/workflows/validate-website.yml` — exact-revision CI gate that checks out the pinned GLAZE UI release revision separately from the Identity source revision
+- `scripts/validate_identity_public_site.py` — validates branding provenance, historical-baseline/current-source distinction, security headers, truth boundaries, responsive/accessibility behavior, and artifact identity
+- `.github/workflows/validate-website.yml` — exact-revision CI gate that checks out the pinned current Stable Glaze source revision separately from the Identity source revision
 
-No remote runtime GLAZE UI dependency is intended for the built site; after a complete accepted release graph exists, verified files are copied into the same-origin `/glaze/` artifact directory.
+No remote runtime GLAZE UI dependency is intended for the built site; verified files are copied into the same-origin `/glaze/` artifact directory.
 
 ## Repository-boundary rule
 
