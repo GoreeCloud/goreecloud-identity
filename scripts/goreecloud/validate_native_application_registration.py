@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 CONTRACT = Path("contracts/native-application-registration.v1.json")
 EXPECTED_SCHEMA = "goreecloud.identity.native-application-registration/v1"
@@ -36,8 +36,9 @@ def require(condition: bool, message: str) -> None:
 
 
 def closed_object(value: object, keys: set[str], name: str) -> dict[str, Any]:
-    require(isinstance(value, dict), f"{name} object is required")
-    section = value
+    if not isinstance(value, dict):
+        raise ContractError(f"{name} object is required")
+    section = cast(dict[str, Any], value)
     require(set(section) == keys, f"{name} fields must be closed and exact")
     return section
 
@@ -56,23 +57,48 @@ def require_flags(
 
 
 def require_contract_only(section: dict[str, Any], name: str) -> None:
-    require(section.get("runtimeAccepted") is False, f"{name} must not claim runtime acceptance")
+    require(
+        section.get("runtimeAccepted") is False,
+        f"{name} must not claim runtime acceptance",
+    )
 
 
 def load_contract() -> dict[str, Any]:
-    value = json.loads(CONTRACT.read_text(encoding="utf-8"))
-    require(isinstance(value, dict), "native registration contract must be a JSON object")
-    return value
+    value: object = json.loads(CONTRACT.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ContractError("native registration contract must be a JSON object")
+    return cast(dict[str, Any], value)
 
 
 def validate_contract(contract: dict[str, Any]) -> None:
-    require(set(contract) == TOP_LEVEL_KEYS, "native registration top-level fields must be closed and exact")
-    require(contract.get("schemaVersion") == EXPECTED_SCHEMA, "unexpected native registration schema")
-    require(contract.get("lifecycle") == "development", "native registration lifecycle must remain development")
-    require(contract.get("canonicalAuthority") == "GoreeCloud Identity", "canonical authority must remain GoreeCloud Identity")
-    require(contract.get("runtimeImplementationState") == "contract_only", "registration runtime must remain contract-only")
-    require(contract.get("productionAccepted") is False, "registration contract must not claim production acceptance")
-    require(contract.get("authorityTransfer") is False, "Identity registration authority must not transfer")
+    require(
+        set(contract) == TOP_LEVEL_KEYS,
+        "native registration top-level fields must be closed and exact",
+    )
+    require(
+        contract.get("schemaVersion") == EXPECTED_SCHEMA,
+        "unexpected native registration schema",
+    )
+    require(
+        contract.get("lifecycle") == "development",
+        "native registration lifecycle must remain development",
+    )
+    require(
+        contract.get("canonicalAuthority") == "GoreeCloud Identity",
+        "canonical authority must remain GoreeCloud Identity",
+    )
+    require(
+        contract.get("runtimeImplementationState") == "contract_only",
+        "registration runtime must remain contract-only",
+    )
+    require(
+        contract.get("productionAccepted") is False,
+        "registration contract must not claim production acceptance",
+    )
+    require(
+        contract.get("authorityTransfer") is False,
+        "Identity registration authority must not transfer",
+    )
 
     record = closed_object(
         contract.get("registrationRecord"),
@@ -89,19 +115,33 @@ def validate_contract(contract: dict[str, Any]) -> None:
         "registrationRecord",
     )
     require(
-        record.get("requiredFields") == [
-            "applicationId", "clientId", "audience", "redirectUris", "allowedScopes", "enabled"
+        record.get("requiredFields")
+        == [
+            "applicationId",
+            "clientId",
+            "audience",
+            "redirectUris",
+            "allowedScopes",
+            "enabled",
         ],
         "registration required fields drifted",
     )
     require(
-        record.get("exactStringFields") == ["applicationId", "clientId", "audience"],
+        record.get("exactStringFields")
+        == ["applicationId", "clientId", "audience"],
         "registration exact string fields drifted",
     )
     require_flags(
         record,
-        required_true=("publicNativeClientRequired", "oneRegistrationPerApplicationAudienceRequired"),
-        required_false=("stringNormalizationAllowed", "blankOrControlBearingIdentifiersAllowed", "embeddedClientSecretAllowed"),
+        required_true=(
+            "publicNativeClientRequired",
+            "oneRegistrationPerApplicationAudienceRequired",
+        ),
+        required_false=(
+            "stringNormalizationAllowed",
+            "blankOrControlBearingIdentifiersAllowed",
+            "embeddedClientSecretAllowed",
+        ),
         name="registrationRecord",
     )
     require_contract_only(record, "registrationRecord")
@@ -121,8 +161,16 @@ def validate_contract(contract: dict[str, Any]) -> None:
     )
     require_flags(
         redirects,
-        required_true=("exactRegistrationRequired", "httpsRequiredOutsideExplicitLoopbackDevelopment", "loopbackDevelopmentMustBeExplicit"),
-        required_false=("wildcardRedirectAllowed", "userinfoAllowed", "fragmentAllowed"),
+        required_true=(
+            "exactRegistrationRequired",
+            "httpsRequiredOutsideExplicitLoopbackDevelopment",
+            "loopbackDevelopmentMustBeExplicit",
+        ),
+        required_false=(
+            "wildcardRedirectAllowed",
+            "userinfoAllowed",
+            "fragmentAllowed",
+        ),
         name="redirectPolicy",
     )
     require_contract_only(redirects, "redirectPolicy")
@@ -141,8 +189,15 @@ def validate_contract(contract: dict[str, Any]) -> None:
     )
     require_flags(
         authority,
-        required_true=("exactAudienceRequired", "explicitAllowedScopesRequired"),
-        required_false=("audienceReuseAcrossUnrelatedApplicationsAllowed", "wildcardScopeAllowed", "clientMayExpandBeyondRegisteredScopes"),
+        required_true=(
+            "exactAudienceRequired",
+            "explicitAllowedScopesRequired",
+        ),
+        required_false=(
+            "audienceReuseAcrossUnrelatedApplicationsAllowed",
+            "wildcardScopeAllowed",
+            "clientMayExpandBeyondRegisteredScopes",
+        ),
         name="audienceAndScopePolicy",
     )
     require_contract_only(authority, "audienceAndScopePolicy")
@@ -161,8 +216,15 @@ def validate_contract(contract: dict[str, Any]) -> None:
     )
     require_flags(
         lifecycle,
-        required_true=("applicationDisablementRequiresSessionRevocationEvaluation", "registrationChangeRequiresSessionReevaluation"),
-        required_false=("disabledRegistrationMayAuthorize", "silentAudienceReassignmentAllowed", "silentClientIdReassignmentAllowed"),
+        required_true=(
+            "applicationDisablementRequiresSessionRevocationEvaluation",
+            "registrationChangeRequiresSessionReevaluation",
+        ),
+        required_false=(
+            "disabledRegistrationMayAuthorize",
+            "silentAudienceReassignmentAllowed",
+            "silentClientIdReassignmentAllowed",
+        ),
         name="lifecyclePolicy",
     )
     require_contract_only(lifecycle, "lifecyclePolicy")
@@ -188,8 +250,14 @@ def validate_contract(contract: dict[str, Any]) -> None:
 
     registrations = contract.get("registrations")
     require(isinstance(registrations, list), "registrations must be an array")
-    require(registrations == [], "source contract must not silently register concrete native applications")
-    require(contract.get("emptyRegistryMeansNoRuntimeRegistrations") is True, "empty registry must mean no runtime registrations")
+    require(
+        registrations == [],
+        "source contract must not silently register concrete native applications",
+    )
+    require(
+        contract.get("emptyRegistryMeansNoRuntimeRegistrations") is True,
+        "empty registry must mean no runtime registrations",
+    )
 
 
 def main() -> int:
