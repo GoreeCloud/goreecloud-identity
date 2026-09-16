@@ -33,11 +33,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - name: Check out pinned GLAZE UI V1.1 Stable source
+      - name: Check out pinned GLAZE UI V1.5.0 Stable source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: GoreeCloud/goreecloud-glaze-ui
-          ref: 15cc76d2bcd4065552dc31c77145b63f34d9e7b2
+          ref: b7fa8164bfdeaa1dc0acb21b770e7601120da04e
           path: .glaze-ui
           persist-credentials: false
       - name: Set up Python
