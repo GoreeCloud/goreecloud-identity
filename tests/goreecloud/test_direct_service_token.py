@@ -89,9 +89,7 @@ def test_only_approved_service_identity_can_receive_privacy_shield_token() -> No
     with pytest.raises(PermissionError, match="not approved"):
         VerifiedDirectServicePrincipal(
             service_id="goreecloud-browser",
-            audience_scopes={
-                PRIVACY_SHIELD_AUDIENCE: frozenset({PRIVACY_SHIELD_VERIFY_SCOPE})
-            },
+            audience_scopes={PRIVACY_SHIELD_AUDIENCE: frozenset({PRIVACY_SHIELD_VERIFY_SCOPE})},
             authentication_context="workload:goreecloud-browser",
         )
 
