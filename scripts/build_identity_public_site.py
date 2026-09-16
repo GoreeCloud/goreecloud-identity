@@ -13,8 +13,10 @@ SOURCE = ROOT / "identity-center-site"
 DIST = ROOT / "dist"
 LOCK = json.loads((SOURCE / "glaze.lock.json").read_text(encoding="utf-8"))
 GLAZE_REPOSITORY = "GoreeCloud/goreecloud-glaze-ui"
-GLAZE_TAG = "v1.1.0"
-GLAZE_STABLE_COMMIT = "15cc76d2bcd4065552dc31c77145b63f34d9e7b2"
+GLAZE_BASELINE_TAG = "v1.1.0"
+GLAZE_BASELINE_COMMIT = "15cc76d2bcd4065552dc31c77145b63f34d9e7b2"
+GLAZE_SOURCE_COMMIT = "b7fa8164bfdeaa1dc0acb21b770e7601120da04e"
+CURRENT_GLAZE_STABLE_VERSION = "1.5.0"
 GLAZE_RAW_HOST = "raw.githubusercontent.com"
 HTTP_OK = 200
 MAX_GLAZE_ASSET_BYTES = 1_048_576
@@ -35,14 +37,18 @@ IMPORT_TARGET_RE = re.compile(
 
 if LOCK.get("schema") != "goreecloud.glaze.consumer-lock.v1":
     raise SystemExit("unsupported Glaze consumer lock schema")
-if LOCK.get("version") != "1.1.0" or LOCK.get("lifecycle") != "Stable":
-    raise SystemExit("Identity Center must target current Stable GLAZE UI V1.1 / 1.1.0")
-if LOCK.get("stable_commit") != GLAZE_STABLE_COMMIT:
-    raise SystemExit("unexpected GLAZE UI V1.1 Stable promotion commit")
+if LOCK.get("version") != "1.1.0" or LOCK.get("lifecycle") != "Historical Stable Baseline":
+    raise SystemExit("Identity Center must preserve its historical GLAZE UI V1.1 / 1.1.0 presentation baseline")
+if LOCK.get("stable_commit") != GLAZE_BASELINE_COMMIT:
+    raise SystemExit("unexpected historical GLAZE UI V1.1 Stable promotion commit")
+if LOCK.get("source_commit") != GLAZE_SOURCE_COMMIT:
+    raise SystemExit("unexpected GLAZE UI repaired source revision")
+if LOCK.get("current_stable_version") != CURRENT_GLAZE_STABLE_VERSION:
+    raise SystemExit("unexpected current Stable GLAZE UI version")
 if LOCK.get("repository") != GLAZE_REPOSITORY:
     raise SystemExit("unexpected Glaze UI source repository")
-if LOCK.get("tag") != GLAZE_TAG:
-    raise SystemExit("unexpected Glaze UI source tag")
+if LOCK.get("tag") != GLAZE_BASELINE_TAG:
+    raise SystemExit("unexpected historical Glaze UI baseline tag")
 
 
 def git_blob_sha(data: bytes) -> str:
@@ -64,10 +70,11 @@ def require_glaze_name(name: str) -> str:
 
 def fetch_glaze(name: str) -> bytes:
     safe_name = require_glaze_name(name)
-    # Fetch by the immutable Stable commit rather than a movable tag. The tag is
-    # recorded in the consumer lock for release identity, while content comes
-    # from the exact accepted revision.
-    path = f"/{GLAZE_REPOSITORY}/{GLAZE_STABLE_COMMIT}/css/{safe_name}"
+    # Identity retains its historical V1.1 presentation baseline, but assets are
+    # sourced from the exact current Stable integration revision that carries
+    # the canonical V1 import-closure repair. This avoids modifying immutable
+    # v1.1.0 release bytes in place or consuming an unreleased patch candidate.
+    path = f"/{GLAZE_REPOSITORY}/{GLAZE_SOURCE_COMMIT}/css/{safe_name}"
     connection = http.client.HTTPSConnection(
         GLAZE_RAW_HOST,
         timeout=20,
@@ -152,9 +159,6 @@ def load_verified_glaze_assets() -> dict[str, bytes]:
 def build() -> None:
     """Build the isolated Identity Center public artifact from reviewed source."""
 
-    # Resolve and verify the complete immutable design-system graph before
-    # touching publication output. A byte-perfect but dependency-incomplete
-    # release must fail without manufacturing a fresh dist artifact.
     glaze_assets = load_verified_glaze_assets()
 
     if DIST.exists():
@@ -174,8 +178,10 @@ def build() -> None:
         (glaze_target / name).write_bytes(data)
 
     print(
-        f"Built Identity Center public site with GLAZE UI V1.1 / {LOCK['version']} "
-        f"{LOCK['lifecycle']} pinned to {LOCK['stable_commit']}"
+        "Built Identity Center public site preserving GLAZE UI V1.1 / "
+        f"{LOCK['version']} historical presentation semantics from repaired "
+        f"current-Stable source {LOCK['source_commit']} (current Stable "
+        f"{LOCK['current_stable_version']})"
     )
 
 
