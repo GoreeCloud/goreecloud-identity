@@ -147,7 +147,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.bandit]
-exclude_dirs = ["**/node_modules/**"]
+exclude_dirs = ["**/node_modules/**", "tests"]
 
 [tool.black]
 line-length = 100
